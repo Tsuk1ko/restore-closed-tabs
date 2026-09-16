@@ -14,7 +14,7 @@
 
 ## 数据模型
 
-记录表以 UUID `id` 为主键，字段为 `url`、`title`、`faviconUrl`、`closedAt`、`incognito`。设置表保存：
+记录表以 UUID `id` 为主键，字段为 `url`、`title`、`faviconUrl`、`closedAt`、`incognito`。另建字段相同的快照表，以同一个 tab UUID 为主键；快照表中的 `closedAt` 表示最近一次持久化快照时间，记录表中的 `closedAt` 表示实际关闭记录时间。设置表保存：
 
 - `locale`: `browser`、`zh-CN`、`en`
 - `maxRecords`: 1–10000，默认 1000
@@ -30,7 +30,9 @@
 
 ## 后台记录流程
 
-后台监听 `tabs.onCreated`、`tabs.onUpdated` 并持久化 tab 快照，因为 `tabs.onRemoved` 只提供 tab ID、窗口 ID 和 `isWindowClosing`，不提供 URL、标题或 favicon。关闭时按快照生成记录。
+后台监听 `tabs.onCreated`、`tabs.onUpdated` 并维护内存 `Map<tabId, TabSnapshot>`。首次建立快照时生成 UUID，后续更新沿用该 UUID，并同步写入快照表；无痕/特殊页面被设置过滤时，不把其 URL、标题或图标写入快照表。`tabs.onRemoved` 只提供 tab ID、窗口 ID 和 `isWindowClosing`，不提供 URL、标题或 favicon，因此关闭时按 UUID 从内存快照取出并从内存 Map 删除，再将其写入记录表。删除内存项先于写记录，使 `tabs.onRemoved` 与 `runtime.onSuspend` 的重叠处理天然幂等。
+
+每分钟更新快照表中仍存活条目的 `closedAt` 为当前时间，用于判断快照新鲜度。`runtime.onSuspend` 中依次尽力执行：取出并清空内存快照、将取出的快照写入记录表、将快照表条目的 `closedAt` 更新为当前时间，全部完成后清空快照表。由于 Chrome 不保证 `onSuspend` 中异步操作完成，该流程只提供尽力而为的优雅关闭处理。
 
 记录过滤规则：
 
@@ -41,7 +43,11 @@
 - `file://`：仅在 Chrome 已授予文件访问权限时尝试。
 - `javascript:`、`devtools:`、`chrome-untrusted:` 及崩溃/退出调试地址：跳过。
 
-每次新增记录前，如启用了 URL 去重，删除完全相同 URL 的旧记录。所有记录表写操作（新增、导入、清除）完成后按 `closedAt` 删除最旧的超量记录；修改容量设置本身不立即裁剪。
+每次新增记录前，如启用了 URL 去重，删除完全相同 URL 的旧记录。所有记录表写操作（新增、导入、清除，以及启动恢复）完成后按 `closedAt` 删除最旧的超量记录；修改容量设置本身不立即裁剪。
+
+## 启动恢复
+
+后台启动时先检查快照表。若存在残留快照，说明上次的关闭流程可能在写入记录或清理快照表前中断：读取残留快照并按 UUID 写入记录表，遇到已有 UUID 时忽略而不覆盖；每成功处理一条就删除对应快照条目，不能直接清空整张表，因为恢复期间可能有新的快照写入。恢复完成后执行记录容量裁剪。
 
 ## Popup
 
