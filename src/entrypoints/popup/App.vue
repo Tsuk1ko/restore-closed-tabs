@@ -1,30 +1,32 @@
 <template>
-  <div class="popup">
-    <header>
-      <input v-model="query" :placeholder="t('search')" autofocus /><button
-        :title="t('settings')"
-        @click="browser.runtime.openOptionsPage()"
-      >
-        ⚙
-      </button>
-    </header>
-    <main v-if="visible.length">
-      <ClosedTabItem
-        v-for="record in visible"
-        :key="record.id"
-        :record="record"
-        :relative-time="dayjs(record.closedAt).fromNow()"
-        @open="open"
-      />
-    </main>
-    <p v-else class="empty">{{ t('empty') }}</p>
-    <footer v-if="pageCount > 1">
-      <button :disabled="page === 1" @click="page--">‹</button
-      ><button v-for="n in pageCount" :key="n" :class="{ active: n === page }" @click="page = n">
-        {{ n }}</button
-      ><button :disabled="page === pageCount" @click="page++">›</button>
-    </footer>
-  </div>
+  <UApp>
+    <div class="popup">
+      <header>
+        <input v-model="query" :placeholder="t('search')" autofocus /><button
+          :title="t('settings')"
+          @click="browser.runtime.openOptionsPage()"
+        >
+          ⚙
+        </button>
+      </header>
+      <main v-if="visible.length">
+        <ClosedTabItem
+          v-for="record in visible"
+          :key="record.id"
+          :record="record"
+          :relative-time="dayjs(record.closedAt).fromNow()"
+          @open="open"
+        />
+      </main>
+      <p v-else class="empty">{{ t('empty') }}</p>
+      <footer v-if="pageCount > 1">
+        <button :disabled="page === 1" @click="page--">‹</button
+        ><button v-for="n in pageCount" :key="n" :class="{ active: n === page }" @click="page = n">
+          {{ n }}</button
+        ><button :disabled="page === pageCount" @click="page++">›</button>
+      </footer>
+    </div>
+  </UApp>
 </template>
 
 <script setup lang="ts">

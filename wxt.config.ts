@@ -10,5 +10,19 @@ export default defineConfig({
     permissions: ['tabs', 'favicon', 'storage', 'alarms'],
     incognito: 'spanning',
   },
-  vite: () => ({ plugins: [ui({ router: false, colorMode: false })] }),
+  vite: () => ({
+    plugins: [
+      ui({
+        router: false,
+        colorMode: false,
+        autoImport: {
+          dts: './src/auto-import.d.ts',
+        },
+        components: {
+          dirs: [],
+          dts: './src/components.d.ts',
+        },
+      }),
+    ],
+  }),
 });

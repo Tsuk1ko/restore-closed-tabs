@@ -1,49 +1,52 @@
 <template>
-  <main class="options">
-    <h1>{{ t('settings') }}</h1>
-    <label
-      >{{ t('locale')
-      }}<select v-model="form.locale">
-        <option value="browser">{{ t('localeBrowser') }}</option>
-        <option value="zh-CN">{{ t('localeZh') }}</option>
-        <option value="en">{{ t('localeEn') }}</option>
-      </select></label
-    >
-    <label
-      >{{ t('maxRecords')
-      }}<input v-model.number="form.maxRecords" type="number" min="1" max="10000"
-    /></label>
-    <label
-      >{{ t('pageSize') }}<input v-model.number="form.pageSize" type="number" min="1" max="100"
-    /></label>
-    <label
-      >{{ t('popupWidth')
-      }}<input v-model.number="form.popupWidth" type="number" min="280" max="800"
-    /></label>
-    <label
-      v-for="key in [
-        'deleteOnRestore',
-        'deduplicateUrlOnClose',
-        'recordIncognito',
-        'recordChromeUrls',
-        'recordExtensionUrls',
-      ]"
-      :key="key"
-      class="check"
-      ><input v-model="form[key]" type="checkbox" />{{ t(key) }}</label
-    >
-    <button class="primary" @click="save">{{ t('save') }}</button
-    ><span class="notice">{{ notice }}</span>
-    <h2>{{ t('data') }}</h2>
-    <button @click="download">{{ t('export') }}</button
-    ><label class="file"
-      >{{ t('import') }}<input type="file" accept="application/json" @change="readFile" /></label
-    ><button @click="confirming = true">{{ t('clear') }}</button>
-    <div v-if="confirming" class="confirm">
-      <p>{{ t('clearConfirm') }}</p>
-      <button @click="clear">{{ t('clear') }}</button><button @click="confirming = false">✕</button>
-    </div>
-  </main>
+  <UApp>
+    <main class="options">
+      <h1>{{ t('settings') }}</h1>
+      <label
+        >{{ t('locale')
+        }}<select v-model="form.locale">
+          <option value="browser">{{ t('localeBrowser') }}</option>
+          <option value="zh-CN">{{ t('localeZh') }}</option>
+          <option value="en">{{ t('localeEn') }}</option>
+        </select></label
+      >
+      <label
+        >{{ t('maxRecords')
+        }}<input v-model.number="form.maxRecords" type="number" min="1" max="10000"
+      /></label>
+      <label
+        >{{ t('pageSize') }}<input v-model.number="form.pageSize" type="number" min="1" max="100"
+      /></label>
+      <label
+        >{{ t('popupWidth')
+        }}<input v-model.number="form.popupWidth" type="number" min="280" max="800"
+      /></label>
+      <label
+        v-for="key in [
+          'deleteOnRestore',
+          'deduplicateUrlOnClose',
+          'recordIncognito',
+          'recordChromeUrls',
+          'recordExtensionUrls',
+        ]"
+        :key="key"
+        class="check"
+        ><input v-model="form[key]" type="checkbox" />{{ t(key) }}</label
+      >
+      <button class="primary" @click="save">{{ t('save') }}</button
+      ><span class="notice">{{ notice }}</span>
+      <h2>{{ t('data') }}</h2>
+      <button @click="download">{{ t('export') }}</button
+      ><label class="file"
+        >{{ t('import') }}<input type="file" accept="application/json" @change="readFile" /></label
+      ><button @click="confirming = true">{{ t('clear') }}</button>
+      <div v-if="confirming" class="confirm">
+        <p>{{ t('clearConfirm') }}</p>
+        <button @click="clear">{{ t('clear') }}</button
+        ><button @click="confirming = false">✕</button>
+      </div>
+    </main>
+  </UApp>
 </template>
 
 <script setup lang="ts">
