@@ -132,9 +132,9 @@ git commit -m "feat: add persistent records and settings database"
 ### Task 3: Implement durable background tab snapshots and recovery
 
 **Files:**
-- Modify: `src/entrypoints/background.ts`
-- Create: `src/background/tab-snapshots.ts`
-- Create: `src/background/url-policy.ts`
+- Modify: `src/entrypoints/background/index.ts`
+- Create: `src/entrypoints/background/tab-snapshots.ts`
+- Create: `src/entrypoints/background/url-policy.ts`
 
 **Interfaces:**
 - `TabSnapshotManager` maintains `Map<number, TabSnapshot>` with stable UUID per tab ID.
@@ -175,7 +175,7 @@ bun run compile
 bun run lint
 bun run build
 
-git add src/entrypoints/background.ts src/background
+git add src/entrypoints/background
 git commit -m "feat: persist and recover closed tab snapshots"
 ```
 
