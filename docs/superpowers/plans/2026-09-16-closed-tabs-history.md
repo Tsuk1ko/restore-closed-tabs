@@ -4,7 +4,7 @@
 
 **Goal:** 构建一个仅面向 Chrome 的 WXT Vue 扩展，持久记录关闭的标签页，在 popup 中搜索、分页和恢复，并通过独立设置页管理行为和记录数据。
 
-**Architecture:** 后台 service worker 用 Chrome tabs 事件维护内存 tab 快照，并以 UUID 同步到 Dexie 快照表；关闭或 service worker 挂起时把快照幂等写入记录表，启动时恢复残留快照。Popup 和 options entrypoint 共享 db、i18n 和领域函数；UI 使用 Nuxt UI 与本地打包图标。
+**Architecture:** 后台 service worker 用 Chrome tabs 事件维护内存 tab 快照，并以 UUID 同步到 Dexie 快照表；关闭事件把快照幂等写入记录表；service worker 空闲重启时恢复会话映射，不把仍打开的标签误记为关闭；新浏览器会话启动时恢复残留快照。Popup 和 options entrypoint 共享 db、i18n 和领域函数；UI 使用 Nuxt UI 与本地打包图标。
 
 **Tech Stack:** WXT 0.21、Vue 3、TypeScript、Dexie、Nuxt UI、Tailwind CSS、Iconify/Lucide 图标、vue-i18n、day.js。
 
@@ -166,7 +166,7 @@ Call `recoverSnapshots()` when the service worker starts. For each residual row,
 
 - [ ] **Step 6: Register Chrome listeners and query initial tabs**
 
-Register `tabs.onCreated`, `tabs.onUpdated`, `tabs.onRemoved`, and `runtime.onSuspend`; query existing tabs after startup to seed snapshots, including incognito tabs when Chrome has granted incognito access and the setting is enabled.
+Register `tabs.onCreated`, `tabs.onUpdated`, `tabs.onRemoved`, and `alarms.onAlarm`; query existing tabs after startup to seed snapshots, including incognito tabs when Chrome has granted incognito access and the setting is enabled.
 
 - [ ] **Step 7: Verify and commit**
 

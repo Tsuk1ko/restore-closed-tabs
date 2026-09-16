@@ -18,7 +18,12 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "vue": "^3.5.42"
+    "@iconify-json/lucide": "^1.2.132",
+    "@nuxt/ui": "^4.11.1",
+    "dayjs": "^1.11.23",
+    "dexie": "^4.4.6",
+    "vue": "^3.5.42",
+    "vue-i18n": "^11.4.10"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.5.1",
