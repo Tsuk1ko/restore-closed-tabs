@@ -32,7 +32,10 @@ async function clearUuid(tabId: number) {
 export async function updateTab(tab: TabLike, settings: Settings) {
   if (tab.id === undefined) return;
   if (!shouldRecordTab(tab, settings)) {
+    // 导航到不允许记录的网址时同时清除持久化快照，避免重启后恢复旧记录
+    const id = memory.get(tab.id)?.id ?? (await getUuid(tab.id));
     memory.delete(tab.id);
+    await deleteSnapshot(id);
     await clearUuid(tab.id);
     return;
   }
@@ -53,18 +56,21 @@ export async function removeTab(tabId: number, settings: Settings) {
   const snapshot = memory.get(tabId);
   memory.delete(tabId);
   await clearUuid(tabId);
-  if (snapshot) await addClosedRecord({ ...snapshot, closedAt: Date.now() }, settings);
+  if (snapshot && shouldRecordTab(snapshot, settings))
+    await addClosedRecord({ ...snapshot, closedAt: Date.now() }, settings);
 }
 export async function heartbeat() {
   await updateSnapshotTimes();
 }
-export async function recoverSnapshots(activeTabs: TabLike[]) {
+// 恢复快照时应用当前记录策略，丢弃已不允许记录的快照
+export async function recoverSnapshots(activeTabs: TabLike[], settings: Settings) {
   const activeUrls = new Set(
     activeTabs.map(tab => tab.url).filter((url): url is string => Boolean(url)),
   );
   for (const snapshot of await listSnapshots()) {
     // ponytail: URL matching is O(n) and ambiguous for duplicate tabs; snapshot rows intentionally omit tabId.
-    if (activeUrls.has(snapshot.url)) await deleteSnapshot(snapshot.id);
+    if (!shouldRecordTab(snapshot, settings) || activeUrls.has(snapshot.url))
+      await deleteSnapshot(snapshot.id);
     else await recoverSnapshot(snapshot);
   }
 }

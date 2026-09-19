@@ -1,2 +1,4 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+src/auto-import.d.ts text eol=lf
+src/components.d.ts text eol=lf

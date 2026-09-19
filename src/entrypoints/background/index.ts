@@ -2,10 +2,35 @@ import { getSettings } from '@/db/settings';
 import { heartbeat, recoverSnapshots, removeTab, seedTabs, updateTab } from './tab-snapshots';
 
 export default defineBackground(() => {
+  if (import.meta.env.DEV) {
+    browser.runtime.onInstalled.addListener(async () => {
+      try {
+        const url = browser.runtime.getURL('/popup.html');
+        const tabs = await browser.tabs.query({});
+        if (!tabs.some(tab => tab.url === url || tab.pendingUrl === url)) {
+          const popup = await browser.tabs.create({ url });
+          // popup 创建成功后仅关闭同窗口原先激活的空白页，保留其他标签页
+          for (const tab of tabs) {
+            if (
+              tab.id !== undefined &&
+              tab.windowId === popup.windowId &&
+              tab.active &&
+              (tab.pendingUrl ?? tab.url) === 'about:blank'
+            ) {
+              await browser.tabs.remove(tab.id);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to open development popup:', error);
+      }
+    });
+  }
+
   const start = async () => {
     const settings = await getSettings();
     const tabs = await browser.tabs.query({});
-    await recoverSnapshots(tabs);
+    await recoverSnapshots(tabs, settings);
     await seedTabs(tabs, settings);
     await browser.alarms.create('snapshot-heartbeat', { periodInMinutes: 1 });
   };
