@@ -18,6 +18,8 @@ export async function saveSettings(input: Partial<Settings>): Promise<Settings> 
     pageSize: clamp(input.pageSize ?? current.pageSize, 1, 100, 10),
     popupWidth: clamp(input.popupWidth ?? current.popupWidth, 280, 800, 400),
   };
+
   await db.settings.put(next);
+
   return next;
 }

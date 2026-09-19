@@ -7,8 +7,10 @@ export default defineBackground(() => {
       try {
         const url = browser.runtime.getURL('/popup.html');
         const tabs = await browser.tabs.query({});
+
         if (!tabs.some(tab => tab.url === url || tab.pendingUrl === url)) {
           const popup = await browser.tabs.create({ url });
+
           // popup 创建成功后仅关闭同窗口原先激活的空白页，保留其他标签页
           for (const tab of tabs) {
             if (
@@ -30,12 +32,15 @@ export default defineBackground(() => {
   const start = async () => {
     const settings = await getSettings();
     const tabs = await browser.tabs.query({});
+
     await recoverSnapshots(tabs, settings);
     await seedTabs(tabs, settings);
+
     await browser.alarms.create('snapshot-heartbeat', { periodInMinutes: 1 });
   };
 
   browser.tabs.onCreated.addListener(async tab => updateTab(tab, await getSettings()));
+
   browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     if (
       changeInfo.url ||
@@ -45,9 +50,12 @@ export default defineBackground(() => {
     )
       await updateTab(tab, await getSettings());
   });
+
   browser.tabs.onRemoved.addListener(async tabId => removeTab(tabId, await getSettings()));
+
   browser.alarms.onAlarm.addListener(alarm => {
     if (alarm.name === 'snapshot-heartbeat') void heartbeat();
   });
+
   void start();
 });

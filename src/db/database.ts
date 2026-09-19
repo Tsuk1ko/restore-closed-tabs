@@ -22,6 +22,7 @@ export class TabsDatabase extends Dexie {
 
   constructor() {
     super('closed-tabs');
+
     this.version(1).stores({
       records: 'id, closedAt, url',
       snapshots: 'id, closedAt',

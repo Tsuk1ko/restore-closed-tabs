@@ -4,7 +4,9 @@ import type { ExportPayload, TabRecord } from './types';
 
 const isRecord = (value: unknown): value is TabRecord => {
   if (!value || typeof value !== 'object') return false;
+
   const item = value as Partial<TabRecord>;
+
   return (
     typeof item.id === 'string' &&
     /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(item.id) &&
@@ -24,12 +26,16 @@ export async function exportRecords(): Promise<ExportPayload> {
 
 export async function importRecords(payload: unknown) {
   if (!payload || typeof payload !== 'object') throw new Error('invalid-payload');
+
   const value = payload as Partial<ExportPayload>;
+
   if (value.version !== 1 || !Array.isArray(value.records) || !value.records.every(isRecord))
     throw new Error('invalid-payload');
+
   await db.transaction('rw', db.records, async () =>
     db.records.bulkPut(value.records as TabRecord[]),
   );
   await pruneRecords();
+
   return value.records.length;
 }

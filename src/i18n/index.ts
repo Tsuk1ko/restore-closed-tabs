@@ -11,6 +11,7 @@ export function resolveLocale(
     ? 'zh-CN'
     : 'en';
 }
+
 export function createI18nForSettings(settings: Settings) {
   return createI18n({
     legacy: false,
