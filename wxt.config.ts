@@ -5,6 +5,17 @@ import { defineConfig } from 'wxt';
 export default defineConfig({
   srcDir: 'src',
   modules: ['@wxt-dev/module-vue'],
+  hooks: {
+    // 每次启动开发服务器后只重载一次，刷新持久化 profile 中的旧后台脚本
+    'server:started': (_wxt, server) => {
+      let reloaded = false;
+      server.ws.on('wxt:background-initialized', () => {
+        if (reloaded) return;
+        reloaded = true;
+        server.reloadExtension();
+      });
+    },
+  },
   manifest: () => ({
     key: process.env.MANIFEST_KEY,
     name: 'Closed Tabs History',

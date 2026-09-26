@@ -7,8 +7,12 @@ export default defineBackground(() => {
       try {
         const url = browser.runtime.getURL('/popup.html');
         const tabs = await browser.tabs.query({});
+        const existingPopup = tabs.find(tab => tab.url === url || tab.pendingUrl === url);
 
-        if (!tabs.some(tab => tab.url === url || tab.pendingUrl === url)) {
+        if (existingPopup?.id !== undefined) {
+          // 扩展重载会使已有页面上下文失效，刷新原标签页以加载新的 popup
+          await browser.tabs.reload(existingPopup.id);
+        } else {
           const popup = await browser.tabs.create({ url });
 
           // popup 创建成功后仅关闭同窗口原先激活的空白页，保留其他标签页
