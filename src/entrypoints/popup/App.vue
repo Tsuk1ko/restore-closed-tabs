@@ -63,12 +63,14 @@ import 'dayjs/locale/zh-cn';
 import { en, zh_cn } from '@nuxt/ui/locale';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { computed, onMounted, ref, watch } from 'vue';
+import { liveQuery } from 'dexie';
+import { computed, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ClosedTabItem from '@/components/ClosedTabItem.vue';
 import { deleteRecord, listRecords } from '@/db/records';
 import { getSettings } from '@/db/settings';
 import type { Settings, TabRecord } from '@/db/types';
+import { resolveLocale } from '@/i18n';
 
 dayjs.extend(relativeTime);
 
@@ -105,13 +107,27 @@ watch(pageCount, value => {
   if (page.value > value) page.value = value;
 });
 
-// 读取设置和记录，并将用户设置的宽度应用到 popup
-async function load() {
-  settings.value = await getSettings();
-  document.body.style.setProperty('--popup-width', `${settings.value.popupWidth}px`);
+// 首次订阅读取设置，后续跨页面变更同步语言、宽度和恢复行为
+const settingsSubscription = liveQuery(getSettings).subscribe({
+  next(value) {
+    settings.value = value;
+    locale.value = resolveLocale(value.locale);
+    document.body.style.setProperty('--popup-width', `${value.popupWidth}px`);
+  },
+  error: error => console.error('Failed to observe settings:', error),
+});
 
-  records.value = await listRecords();
-}
+// 记录增删和导入统一由查询订阅刷新，设置或快照写入不会触发列表查询
+const recordsSubscription = liveQuery(listRecords).subscribe({
+  next: value => (records.value = value),
+  error: error => console.error('Failed to observe records:', error),
+});
+
+// 组件卸载时释放订阅，避免继续接收数据库更新
+onUnmounted(() => {
+  settingsSubscription.unsubscribe();
+  recordsSubscription.unsubscribe();
+});
 
 // 左键前台恢复并关闭 popup，中键后台恢复，按设置决定是否删除记录
 async function open(record: TabRecord, middle: boolean) {
@@ -120,7 +136,6 @@ async function open(record: TabRecord, middle: boolean) {
 
     if (settings.value?.deleteOnRestore) {
       await deleteRecord(record.id);
-      await load();
     }
 
     if (!middle) window.close();
@@ -128,6 +143,4 @@ async function open(record: TabRecord, middle: boolean) {
     /* keep record when Chrome rejects navigation */
   }
 }
-
-onMounted(load);
 </script>
