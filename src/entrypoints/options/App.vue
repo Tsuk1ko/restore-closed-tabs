@@ -120,8 +120,8 @@ const toast = useToast();
 const uiLocale = computed(() => (locale.value === 'zh-CN' ? zh_cn : en));
 const localeItems = computed(() => [
   { label: t('localeBrowser'), value: 'browser' },
-  { label: t('localeZh'), value: 'zh-CN' },
-  { label: t('localeEn'), value: 'en' },
+  { label: '简体中文', value: 'zh-CN' },
+  { label: 'English', value: 'en' },
 ]);
 const numberFields = [
   { name: 'maxRecords', min: 100, max: 10000 },

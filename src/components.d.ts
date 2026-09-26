@@ -16,6 +16,7 @@ declare module 'vue' {
     UAvatar: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/Avatar.vue')['default']
     UButton: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/Button.vue')['default']
     UCheckbox: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/Checkbox.vue')['default']
+    UContextMenu: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/ContextMenu.vue')['default']
     UEmpty: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/Empty.vue')['default']
     UFileUpload: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/FileUpload.vue')['default']
     UForm: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/Form.vue')['default']

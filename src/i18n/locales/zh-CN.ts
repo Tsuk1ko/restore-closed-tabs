@@ -12,8 +12,6 @@ export default {
   integerRange: '请输入 {min} 到 {max} 之间的整数',
   locale: '语言',
   localeBrowser: '跟随浏览器',
-  localeZh: '简体中文',
-  localeEn: 'English',
   maxRecords: '最大记录条数',
   pageSize: '每页条数',
   popupWidth: 'Popup 宽度',
@@ -30,4 +28,8 @@ export default {
   invalidImport: '文件格式无效或版本不支持',
   clearConfirm: '确定清除全部记录吗？',
   restoreError: '无法打开此页面',
+  copyTitle: '复制标题',
+  copyUrl: '复制网址',
+  copyLink: '复制超链接',
+  delete: '删除',
 };

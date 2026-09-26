@@ -12,8 +12,6 @@ export default {
   integerRange: 'Enter an integer between {min} and {max}',
   locale: 'Language',
   localeBrowser: 'Browser',
-  localeZh: 'Simplified Chinese',
-  localeEn: 'English',
   maxRecords: 'Maximum records',
   pageSize: 'Items per page',
   popupWidth: 'Popup width',
@@ -30,4 +28,8 @@ export default {
   invalidImport: 'Invalid file or unsupported version',
   clearConfirm: 'Clear all records?',
   restoreError: 'Unable to open this page',
+  copyTitle: 'Copy title',
+  copyUrl: 'Copy URL',
+  copyLink: 'Copy hyperlink',
+  delete: 'Delete',
 };
