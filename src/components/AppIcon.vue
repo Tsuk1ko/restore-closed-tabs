@@ -1,9 +1,8 @@
 <template>
   <UAvatar
-    class="size-8 shrink-0 rounded-none"
+    class="size-8 shrink-0 rounded-lg overflow-hidden"
     :class="{
       'bg-transparent': src,
-      'rounded-lg': !src,
     }"
     :src="src"
     :alt="alt || ''"
