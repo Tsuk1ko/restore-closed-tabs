@@ -29,6 +29,7 @@
   "devDependencies": {
     "@antfu/eslint-config": "^9.5.1",
     "@tsuk1ko/eslint-config": "^2.1.1",
+    "@wxt-dev/auto-icons": "^1.1.2",
     "@wxt-dev/module-vue": "^1.0.3",
     "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",

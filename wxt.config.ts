@@ -4,7 +4,10 @@ import { defineConfig } from 'wxt';
 
 export default defineConfig({
   srcDir: 'src',
-  modules: ['@wxt-dev/module-vue'],
+  modules: ['@wxt-dev/module-vue', '@wxt-dev/auto-icons'],
+  autoIcons: {
+    developmentIndicator: false,
+  },
   hooks: {
     // 每次启动开发服务器后只重载一次，刷新持久化 profile 中的旧后台脚本
     'server:started': (_wxt, server) => {
