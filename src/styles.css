@@ -1,19 +1,11 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
 
-:root {
-  font-family: Inter, system-ui, sans-serif;
-  color: #1f2937;
-  background: white;
-}
-* {
-  box-sizing: border-box;
-}
-body {
-  margin: 0;
-}
-button,
-input,
-select {
-  font: inherit;
+/* 全局基础样式放入 base 层，允许组件与 Tailwind 工具类覆盖 */
+@layer base {
+  :root {
+    font-family: Inter, system-ui, sans-serif;
+    color: #1f2937;
+    background: white;
+  }
 }

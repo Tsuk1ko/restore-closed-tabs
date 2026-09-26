@@ -1,35 +1,58 @@
 <template>
-  <UApp>
-    <div class="popup">
-      <header>
-        <input v-model="query" :placeholder="t('search')" autofocus /><button
+  <UApp :locale="uiLocale">
+    <div class="w-full bg-default text-default">
+      <header class="flex gap-2 border-b border-default p-2">
+        <UInput
+          v-model="query"
+          class="min-w-0 flex-1"
+          :placeholder="t('search')"
+          :aria-label="t('search')"
+          autofocus
+        />
+        <UButton
+          icon="i-lucide-settings"
+          color="neutral"
+          variant="outline"
           :title="t('settings')"
+          :aria-label="t('settings')"
           @click="browser.runtime.openOptionsPage()"
-        >
-          ⚙
-        </button>
+        />
       </header>
       <main v-if="visible.length">
         <ClosedTabItem
           v-for="record in visible"
           :key="record.id"
           :record="record"
-          :relative-time="dayjs(record.closedAt).fromNow()"
+          :relative-time="
+            dayjs(record.closedAt)
+              .locale(locale === 'zh-CN' ? 'zh-cn' : 'en')
+              .fromNow()
+          "
           @open="open"
         />
       </main>
-      <p v-else class="empty">{{ t('empty') }}</p>
-      <footer v-if="pageCount > 1">
-        <button :disabled="page === 1" @click="page--">‹</button
-        ><button v-for="n in pageCount" :key="n" :class="{ active: n === page }" @click="page = n">
-          {{ n }}</button
-        ><button :disabled="page === pageCount" @click="page++">›</button>
+      <UEmpty
+        v-else
+        :title="t('empty')"
+        icon="i-lucide-history"
+        size="sm"
+        class="rounded-none border-0 py-9"
+      />
+      <footer v-if="pageCount > 1" class="flex justify-center p-2">
+        <UPagination
+          v-model:page="page"
+          :total="filtered.length"
+          :items-per-page="pageSize"
+          size="xs"
+        />
       </footer>
     </div>
   </UApp>
 </template>
 
 <script setup lang="ts">
+import 'dayjs/locale/zh-cn';
+import { en, zh_cn } from '@nuxt/ui/locale';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { computed, onMounted, ref, watch } from 'vue';
@@ -41,13 +64,15 @@ import type { Settings, TabRecord } from '@/db/types';
 
 dayjs.extend(relativeTime);
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
+const uiLocale = computed(() => (locale.value === 'zh-CN' ? zh_cn : en));
 
 const records = ref<TabRecord[]>([]);
 const query = ref('');
 const page = ref(1);
 const settings = ref<Settings>();
 
+// 按标题和网址筛选记录，保留原有时间顺序
 const filtered = computed(() => {
   const q = query.value.trim().toLowerCase();
 
@@ -56,18 +81,15 @@ const filtered = computed(() => {
     : records.value;
 });
 
-const pageCount = computed(() =>
-  Math.max(1, Math.ceil(filtered.value.length / (settings.value?.pageSize || 10))),
-);
+const pageSize = computed(() => settings.value?.pageSize || 10);
+const pageCount = computed(() => Math.max(1, Math.ceil(filtered.value.length / pageSize.value)));
 
 const visible = computed(() =>
-  filtered.value.slice(
-    (page.value - 1) * (settings.value?.pageSize || 10),
-    page.value * (settings.value?.pageSize || 10),
-  ),
+  filtered.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value),
 );
 
-watch([query, () => settings.value?.pageSize], () => {
+// 搜索或每页条数变化时返回首页，删除末页记录后收敛到最后一页
+watch([query, pageSize], () => {
   page.value = 1;
 });
 
@@ -75,6 +97,7 @@ watch(pageCount, value => {
   if (page.value > value) page.value = value;
 });
 
+// 读取设置和记录，并将用户设置的宽度应用到 popup
 async function load() {
   settings.value = await getSettings();
   document.body.style.setProperty('--popup-width', `${settings.value.popupWidth}px`);
@@ -82,6 +105,7 @@ async function load() {
   records.value = await listRecords();
 }
 
+// 左键前台恢复并关闭 popup，中键后台恢复，按设置决定是否删除记录
 async function open(record: TabRecord, middle: boolean) {
   try {
     await browser.tabs.create({ url: record.url, active: !middle });

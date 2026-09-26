@@ -11,7 +11,20 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    UAlert: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/Alert.vue')['default']
     UApp: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/App.vue')['default']
+    UAvatar: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/Avatar.vue')['default']
+    UButton: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/Button.vue')['default']
+    UCheckbox: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/Checkbox.vue')['default']
+    UEmpty: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/Empty.vue')['default']
+    UFileUpload: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/FileUpload.vue')['default']
+    UForm: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/Form.vue')['default']
+    UFormField: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/FormField.vue')['default']
+    UInput: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/Input.vue')['default']
+    UInputNumber: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/InputNumber.vue')['default']
+    UModal: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/Modal.vue')['default']
+    UPagination: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/Pagination.vue')['default']
+    USelect: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/Select.vue')['default']
     UTooltip: typeof import('./../node_modules/@nuxt/ui/dist/runtime/components/Tooltip.vue')['default']
   }
 }
