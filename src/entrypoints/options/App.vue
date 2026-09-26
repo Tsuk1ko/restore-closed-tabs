@@ -2,15 +2,14 @@
   <UApp :locale="uiLocale">
     <main class="mx-auto grid max-w-160 gap-5 px-5 py-8">
       <h1 class="text-2xl font-semibold">{{ t('settings') }}</h1>
-      <UForm
-        :state="form"
-        :validate="validate"
-        :disabled="loading"
-        class="grid gap-4"
-        @submit="save"
-      >
+      <UForm :state="form" :validate="validate" :disabled="loading" class="grid gap-4">
         <UFormField name="locale" :label="t('locale')">
-          <USelect v-model="form.locale" :items="localeItems" class="w-full" />
+          <USelect
+            v-model="form.locale"
+            :items="localeItems"
+            class="w-full"
+            @update:model-value="save('locale')"
+          />
         </UFormField>
         <UFormField
           v-for="field in numberFields"
@@ -27,6 +26,7 @@
             :format-options="{ useGrouping: false, maximumFractionDigits: 10 }"
             :locale="locale"
             class="w-full"
+            @update:model-value="save(field.name)"
           />
         </UFormField>
         <UCheckbox
@@ -35,8 +35,8 @@
           v-model="form[key]"
           :name="key"
           :label="t(key)"
+          @update:model-value="save(key)"
         />
-        <UButton type="submit" :label="t('save')" loading-auto class="justify-self-start" />
       </UForm>
 
       <UAlert v-if="notice" :title="notice" :color="noticeColor" variant="soft" role="status" />
@@ -46,6 +46,7 @@
         <div class="flex flex-wrap items-center gap-2">
           <UButton
             :label="t('export')"
+            icon="i-lucide-upload"
             color="neutral"
             variant="outline"
             loading-auto
@@ -65,7 +66,7 @@
             <template #default="{ open }">
               <UButton
                 :label="t('import')"
-                icon="i-lucide-upload"
+                icon="i-lucide-download"
                 color="neutral"
                 variant="outline"
                 :loading="importing"
@@ -146,6 +147,7 @@ const clearing = ref(false);
 const importing = ref(false);
 const notice = ref('');
 const noticeColor = ref<'success' | 'error'>('success');
+let saveQueue = Promise.resolve();
 
 // 复用字段范围检查空值、非整数及越界输入，不引入额外校验依赖
 function validate(): FormError[] {
@@ -168,30 +170,23 @@ async function load() {
   }
 }
 
-// 保存已校验的设置，并同步页面及 Nuxt UI 的语言
-async function save() {
-  if (
-    validate().length ||
-    form.maxRecords == null ||
-    form.pageSize == null ||
-    form.popupWidth == null
-  )
-    return;
-  try {
-    const saved = await saveSettings({
-      ...form,
-      maxRecords: form.maxRecords,
-      pageSize: form.pageSize,
-      popupWidth: form.popupWidth,
-    });
-    Object.assign(form, saved);
-    locale.value = resolveLocale(saved.locale);
-    noticeColor.value = 'success';
-    notice.value = t('saved');
-  } catch {
-    noticeColor.value = 'error';
-    notice.value = t('operationFailed');
-  }
+// 仅保存当前有效字段，其他输入框的无效草稿不会阻止此项保存
+function save(key: keyof Settings) {
+  const value = form[key];
+  if (loading.value || value == null || validate().some(error => error.name === key)) return;
+
+  // 串行写入避免快速连续调整时覆盖较新的设置，不将旧保存结果写回表单
+  saveQueue = saveQueue.then(async () => {
+    try {
+      const saved = await saveSettings({ [key]: value });
+      if (key === 'locale') locale.value = resolveLocale(saved.locale);
+      noticeColor.value = 'success';
+      notice.value = t('saved');
+    } catch {
+      noticeColor.value = 'error';
+      notice.value = t('operationFailed');
+    }
+  });
 }
 
 // 导出现有 JSON 格式，通过临时下载链接保存并释放对象 URL

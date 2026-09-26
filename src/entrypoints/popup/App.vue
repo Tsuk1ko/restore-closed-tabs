@@ -30,6 +30,12 @@
           "
           @open="open"
         />
+        <!-- 多页时按每项 45px 补齐末页空位，保持翻页高度稳定 -->
+        <div
+          v-if="pageCount > 1"
+          aria-hidden="true"
+          :style="{ height: `${(pageSize - visible.length) * 45}px` }"
+        ></div>
       </main>
       <UEmpty
         v-else
