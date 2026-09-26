@@ -7,6 +7,7 @@
           class="min-w-0 flex-1"
           :placeholder="t('search')"
           :aria-label="t('search')"
+          spellcheck="false"
           autofocus
         />
         <UButton
@@ -42,7 +43,8 @@
         :title="t('empty')"
         icon="i-lucide-history"
         size="sm"
-        class="rounded-none border-0 py-9"
+        class="rounded-none border-0 pt-9! pb-10!"
+        style="box-shadow: none"
       />
       <footer v-if="pageCount > 1" class="flex justify-center p-2">
         <UPagination

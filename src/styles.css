@@ -1,11 +1,10 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
 
-/* 全局基础样式放入 base 层，允许组件与 Tailwind 工具类覆盖 */
-@layer base {
-  :root {
-    font-family: Inter, system-ui, sans-serif;
-    color: #1f2937;
-    background: white;
-  }
+body {
+  user-select: none;
+}
+
+input {
+  user-select: auto;
 }
