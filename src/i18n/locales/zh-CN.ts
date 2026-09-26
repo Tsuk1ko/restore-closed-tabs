@@ -19,7 +19,7 @@ export default {
   popupWidth: 'Popup 宽度',
   deleteOnRestore: '恢复后删除记录',
   deduplicateUrlOnClose: '记录时清除相同网址的旧记录',
-  recordIncognito: '在无痕模式下记录',
+  recordIncognito: '无痕模式下启用记录',
   recordChromeUrls: '记录 chrome:// 页面',
   recordExtensionUrls: '记录 chrome-extension:// 页面',
   data: '记录数据',
