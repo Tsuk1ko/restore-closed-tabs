@@ -45,6 +45,7 @@
           <UButton
             :label="t('export')"
             icon="i-lucide-upload"
+            :ui="{ leadingIcon: 'size-4' }"
             color="neutral"
             variant="outline"
             loading-auto
@@ -65,6 +66,7 @@
               <UButton
                 :label="t('import')"
                 icon="i-lucide-download"
+                :ui="{ leadingIcon: 'size-4' }"
                 color="neutral"
                 variant="outline"
                 @click="open()"
