@@ -1,6 +1,6 @@
 <template>
   <UApp :locale="uiLocale">
-    <div class="w-full bg-default text-default">
+    <div class="w-full bg-default text-default" @contextmenu.prevent>
       <header class="flex gap-2 border-b border-default p-2">
         <UInput
           v-model="query"
@@ -9,6 +9,7 @@
           :aria-label="t('search')"
           spellcheck="false"
           autofocus
+          @contextmenu.stop
         />
         <UButton
           icon="i-lucide-settings"
