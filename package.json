@@ -1,6 +1,6 @@
 {
-  "name": "wxt-vue-starter",
-  "description": "manifest.json description",
+  "name": "restore-closed-tabs",
+  "description": "Remember and restore closed tabs",
   "private": true,
   "version": "0.0.0",
   "type": "module",

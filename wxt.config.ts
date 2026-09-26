@@ -21,8 +21,8 @@ export default defineConfig({
   },
   manifest: () => ({
     key: process.env.MANIFEST_KEY,
-    name: 'Closed Tabs History',
-    description: 'Remember and restore closed tabs.',
+    name: 'Restore Closed Tabs',
+    description: 'Remember and restore closed tabs',
     permissions: ['tabs', 'favicon', 'storage', 'alarms'],
     incognito: 'spanning',
   }),
