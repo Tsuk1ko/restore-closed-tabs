@@ -15,7 +15,7 @@
           v-for="field in numberFields"
           :key="field.name"
           :name="field.name"
-          :label="t(field.name)"
+          :label="`${t(field.name)} (${field.min}~${field.max})`"
         >
           <UInputNumber
             v-model="form[field.name]"
@@ -38,8 +38,6 @@
           @update:model-value="save(key)"
         />
       </UForm>
-
-      <UAlert v-if="notice" :title="notice" :color="noticeColor" variant="soft" role="status" />
 
       <section class="grid gap-4" aria-labelledby="data-heading">
         <h2 id="data-heading" class="text-xl font-semibold">{{ t('data') }}</h2>
@@ -69,7 +67,6 @@
                 icon="i-lucide-download"
                 color="neutral"
                 variant="outline"
-                :loading="importing"
                 @click="open()"
               />
             </template>
@@ -83,6 +80,7 @@
         :description="t('clearConfirm')"
         :dismissible="!clearing"
         :close="!clearing"
+        :ui="{ content: 'divide-y-0' }"
       >
         <template #footer>
           <div class="flex w-full justify-end gap-2">
@@ -103,7 +101,9 @@
 
 <script setup lang="ts">
 import type { FormError } from '@nuxt/ui';
+import { useToast } from '@nuxt/ui/composables';
 import { en, zh_cn } from '@nuxt/ui/locale';
+import dayjs from 'dayjs';
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { defaultSettings } from '@/db/database';
@@ -114,6 +114,7 @@ import type { Settings } from '@/db/types';
 import { resolveLocale } from '@/i18n';
 
 const { t, locale } = useI18n();
+const toast = useToast();
 const uiLocale = computed(() => (locale.value === 'zh-CN' ? zh_cn : en));
 const localeItems = computed(() => [
   { label: t('localeBrowser'), value: 'browser' },
@@ -121,8 +122,8 @@ const localeItems = computed(() => [
   { label: t('localeEn'), value: 'en' },
 ]);
 const numberFields = [
-  { name: 'maxRecords', min: 1, max: 10000 },
-  { name: 'pageSize', min: 1, max: 100 },
+  { name: 'maxRecords', min: 100, max: 10000 },
+  { name: 'pageSize', min: 5, max: 100 },
   { name: 'popupWidth', min: 280, max: 800 },
 ] as const;
 const booleanFields = [
@@ -145,8 +146,6 @@ const loading = ref(true);
 const confirming = ref(false);
 const clearing = ref(false);
 const importing = ref(false);
-const notice = ref('');
-const noticeColor = ref<'success' | 'error'>('success');
 let saveQueue = Promise.resolve();
 
 // 复用字段范围检查空值、非整数及越界输入，不引入额外校验依赖
@@ -165,8 +164,7 @@ async function load() {
     Object.assign(form, await getSettings());
     loading.value = false;
   } catch {
-    noticeColor.value = 'error';
-    notice.value = t('operationFailed');
+    toast.add({ title: t('operationFailed'), color: 'error', duration: 2000 });
   }
 }
 
@@ -180,11 +178,12 @@ function save(key: keyof Settings) {
     try {
       const saved = await saveSettings({ [key]: value });
       if (key === 'locale') locale.value = resolveLocale(saved.locale);
-      noticeColor.value = 'success';
-      notice.value = t('saved');
+      // 固定 ID 使连续保存合并为同一条 Toast，不挤占页面布局
+      toast.add({ id: 'settings-saved', title: t('saved'), color: 'success', duration: 0 });
+      await nextTick();
+      toast.update('settings-saved', { duration: 2000 });
     } catch {
-      noticeColor.value = 'error';
-      notice.value = t('operationFailed');
+      toast.add({ title: t('operationFailed'), color: 'error', duration: 2000 });
     }
   });
 }
@@ -197,12 +196,11 @@ async function download() {
     a.href = URL.createObjectURL(
       new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }),
     );
-    a.download = `closed-tabs-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `closed-tabs-history-export-${dayjs().format('YYYYMMDDHHmmss')}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
   } catch {
-    noticeColor.value = 'error';
-    notice.value = t('operationFailed');
+    toast.add({ title: t('operationFailed'), color: 'error', duration: 2000 });
   }
 }
 
@@ -212,11 +210,9 @@ async function readFile(file: File | null | undefined) {
   importing.value = true;
   try {
     const count = await importRecords(JSON.parse(await file.text()));
-    noticeColor.value = 'success';
-    notice.value = t('importSuccess', { count });
+    toast.add({ title: t('importSuccess', { count }), color: 'success', duration: 2000 });
   } catch {
-    noticeColor.value = 'error';
-    notice.value = t('invalidImport');
+    toast.add({ title: t('invalidImport'), color: 'error', duration: 2000 });
   } finally {
     importing.value = false;
   }
@@ -228,11 +224,9 @@ async function clear() {
   try {
     await clearRecords();
     confirming.value = false;
-    noticeColor.value = 'success';
-    notice.value = t('cleared');
+    toast.add({ title: t('cleared'), color: 'success', duration: 2000 });
   } catch {
-    noticeColor.value = 'error';
-    notice.value = t('operationFailed');
+    toast.add({ title: t('operationFailed'), color: 'error', duration: 2000 });
   } finally {
     clearing.value = false;
   }
