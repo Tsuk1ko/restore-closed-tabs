@@ -14,8 +14,8 @@ export async function saveSettings(input: Partial<Settings>): Promise<Settings> 
     ...current,
     ...input,
     id: 'current',
-    maxRecords: clamp(input.maxRecords ?? current.maxRecords, 1, 10000, 1000),
-    pageSize: clamp(input.pageSize ?? current.pageSize, 1, 100, 10),
+    maxRecords: clamp(input.maxRecords ?? current.maxRecords, 100, 10000, 1000),
+    pageSize: clamp(input.pageSize ?? current.pageSize, 5, 100, 10),
     popupWidth: clamp(input.popupWidth ?? current.popupWidth, 280, 800, 400),
   };
 
