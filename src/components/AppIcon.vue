@@ -1,6 +1,6 @@
 <template>
   <UAvatar
-    class="size-8 shrink-0 overflow-hidden rounded-lg"
+    class="size-6 shrink-0 overflow-hidden rounded-lg"
     :class="{
       'bg-transparent': src,
     }"
