@@ -7,6 +7,7 @@
           class="min-w-0 flex-1"
           :placeholder="t('search')"
           :aria-label="t('search')"
+          :ui="{ base: 'text-sm!' }"
           spellcheck="false"
           autofocus
           @contextmenu.stop
