@@ -1,6 +1,6 @@
 import type { Settings } from '@/db/types';
 
-const allowedProtocols = new Set(['http:', 'https:', 'ftp:', 'ftps:']);
+const allowedProtocols = new Set(['http:', 'https:']);
 
 interface TabLike {
   url?: string;
