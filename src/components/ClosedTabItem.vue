@@ -16,14 +16,14 @@
       }}</span>
     </span>
     <UTooltip
-      v-if="closedDate"
-      :text="closedDate.toLocaleString()"
+      v-if="closedAtDate"
+      :text="closedAtDate.toLocaleString()"
       :content="{ side: 'left' }"
       :delay-duration="300"
       disable-hoverable-content
     >
       <time
-        :datetime="closedDate.toISOString()"
+        :datetime="closedAtDate.toISOString()"
         class="shrink-0 whitespace-nowrap text-[11px] text-muted"
         >{{ relativeTime }}</time
       >
@@ -34,14 +34,17 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { TabRecord } from '@/db/types';
+import { useRelativeTime } from '@/hooks/useCurrentTime';
 import AppIcon from './AppIcon.vue';
 
-const props = defineProps<{ record: TabRecord; relativeTime: string }>();
+const { record } = defineProps<{ record: TabRecord }>();
 defineEmits<{ open: [record: TabRecord, middle: boolean] }>();
 
 // 无效时间不生成 datetime，避免历史或导入数据导致 toISOString 抛出异常
-const closedDate = computed(() => {
-  const date = new Date(props.record.closedAt);
+const closedAtDate = computed(() => {
+  const date = new Date(record.closedAt);
   return Number.isNaN(date.getTime()) ? undefined : date;
 });
+
+const relativeTime = useRelativeTime(() => record.closedAt);
 </script>

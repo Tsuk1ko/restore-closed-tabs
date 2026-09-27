@@ -26,11 +26,6 @@
           :key="record.id"
           :record="record"
           :class="{ 'bg-elevated': contextRecord?.id === record.id }"
-          :relative-time="
-            dayjs(record.closedAt)
-              .locale(locale === 'zh-TW' ? 'zh-tw' : locale === 'zh-CN' ? 'zh-cn' : 'en')
-              .fromNow()
-          "
           @open="open"
           @contextmenu.stop="showContextMenu($event, record)"
         />
@@ -69,6 +64,7 @@ import 'dayjs/locale/zh-tw';
 import type { ContextMenuItem } from '@nuxt/ui';
 import { useToast } from '@nuxt/ui/composables';
 import { en, zh_cn, zh_tw } from '@nuxt/ui/locale';
+import { useTimeoutFn } from '@vueuse/core';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { liveQuery } from 'dexie';
@@ -86,6 +82,14 @@ const { t, locale } = useI18n();
 const toast = useToast();
 const uiLocale = computed(() =>
   locale.value === 'zh-TW' ? zh_tw : locale.value === 'zh-CN' ? zh_cn : en,
+);
+
+watch(
+  locale,
+  value => {
+    dayjs.locale(value === 'zh-TW' ? 'zh-tw' : value === 'zh-CN' ? 'zh-cn' : 'en');
+  },
+  { immediate: true },
 );
 
 const records = ref<TabRecord[]>([]);
@@ -152,25 +156,31 @@ async function runContextAction(action: 'title' | 'url' | 'link' | 'delete') {
 const pageSize = computed(() => settings.value?.pageSize || 10);
 const pageCount = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)));
 
+// 应用稳定后的搜索词并返回首页，定时器随组件作用域自动清理
+function applySearch(q: string) {
+  searchQuery.value = q;
+  page.value = 1;
+}
+
+const { start: scheduleSearch, stop: cancelSearch } = useTimeoutFn(applySearch, 300, {
+  immediate: false,
+});
+
 // 连续输入停止 300ms 后应用搜索，清空时立即恢复首页并取消待执行的搜索
 watch(
   query,
-  (value, _previous, onCleanup) => {
+  value => {
     const q = value.trim().toLowerCase();
-    const applySearch = () => {
-      searchQuery.value = q;
-      page.value = 1;
-    };
 
     if (!q) {
-      applySearch();
+      cancelSearch();
+      applySearch(q);
       return;
     }
 
     // 输入时立即使旧查询失效，防抖期间保留已显示的列表且不发起查询
     searchQuery.value = null;
-    const timer = setTimeout(applySearch, 300);
-    onCleanup(() => clearTimeout(timer));
+    scheduleSearch(q);
   },
   { flush: 'sync' },
 );
@@ -229,7 +239,7 @@ watch(
   { immediate: true },
 );
 
-// 查询订阅与防抖计时器由 watch 自动清理，此处释放独立的设置订阅
+// 查询订阅与防抖计时器随组件作用域自动清理，此处释放独立的设置订阅
 onUnmounted(() => {
   settingsSubscription.unsubscribe();
 });

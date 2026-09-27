@@ -20,6 +20,7 @@
   "dependencies": {
     "@iconify-json/lucide": "^1.2.137",
     "@nuxt/ui": "^4.11.2",
+    "@vueuse/core": "^15.0.0",
     "dayjs": "^1.11.23",
     "dexie": "^4.4.6",
     "tailwindcss": "^4.3.3",
