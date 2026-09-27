@@ -27,7 +27,29 @@ export async function addClosedRecord(record: TabRecord, settings?: Settings) {
   });
 }
 
-export const listRecords = () => db.records.orderBy('closedAt').reverse().toArray();
+// 在同一只读事务内统计总数并读取当前页，避免记录变更导致页码与内容不一致
+export async function listRecords(
+  page: number,
+  pageSize: number,
+  query = '',
+): Promise<{ records: TabRecord[]; total: number; page: number }> {
+  const q = query.trim().toLowerCase();
+
+  return db.transaction('r', db.records, async () => {
+    const collection = db.records.orderBy('closedAt').reverse();
+    // ponytail: 子串搜索仍需扫描记录，搜索实测变慢后再考虑专用索引
+    if (q) collection.filter(record => `${record.title}\n${record.url}`.toLowerCase().includes(q));
+
+    const total = q ? await collection.clone().count() : await db.records.count();
+    const currentPage = Math.max(1, Math.min(page, Math.ceil(total / pageSize)));
+    const records = await collection
+      .offset((currentPage - 1) * pageSize)
+      .limit(pageSize)
+      .toArray();
+
+    return { records, total, page: currentPage };
+  });
+}
 
 export const deleteRecord = (id: string) => db.records.delete(id);
 

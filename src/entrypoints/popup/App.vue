@@ -1,6 +1,6 @@
 <template>
   <UApp :locale="uiLocale">
-    <div class="w-full bg-default text-default" @contextmenu.prevent>
+    <div class="w-full bg-default text-default" :aria-busy="loading" @contextmenu.prevent>
       <header class="flex gap-2 border-b border-default p-2">
         <UInput
           v-model="query"
@@ -20,9 +20,9 @@
           @click="browser.runtime.openOptionsPage()"
         />
       </header>
-      <main v-if="visible.length">
+      <main v-if="records.length">
         <ClosedTabItem
-          v-for="record in visible"
+          v-for="record in records"
           :key="record.id"
           :record="record"
           :class="{ 'bg-elevated': contextRecord?.id === record.id }"
@@ -38,12 +38,12 @@
         <div
           v-if="pageCount > 1"
           aria-hidden="true"
-          :style="{ height: `${(pageSize - visible.length) * 45}px` }"
+          :style="{ height: `${Math.max(0, pageSize - records.length) * 45}px` }"
         ></div>
       </main>
       <UEmpty
-        v-else
-        :title="t('empty')"
+        v-else-if="!loading"
+        :title="t(failed ? 'operationFailed' : 'empty')"
         icon="i-lucide-history"
         size="sm"
         class="rounded-none border-0 pt-9! pb-10!"
@@ -57,12 +57,7 @@
         <span ref="contextMenuTrigger" class="hidden" @contextmenu.stop></span>
       </UContextMenu>
       <footer v-if="pageCount > 1" class="flex justify-center p-2">
-        <UPagination
-          v-model:page="page"
-          :total="filtered.length"
-          :items-per-page="pageSize"
-          size="xs"
-        />
+        <UPagination v-model:page="page" :total="total" :items-per-page="pageSize" size="xs" />
       </footer>
     </div>
   </UApp>
@@ -94,7 +89,12 @@ const uiLocale = computed(() =>
 );
 
 const records = ref<TabRecord[]>([]);
+const total = ref(0);
+const loading = ref(true);
+const failed = ref(false);
 const query = ref('');
+// null 表示正在等待输入稳定，此时不接收旧查询结果
+const searchQuery = ref<string | null>('');
 const page = ref(1);
 const settings = ref<Settings>();
 const contextMenuTrigger = ref<HTMLElement>();
@@ -149,30 +149,34 @@ async function runContextAction(action: 'title' | 'url' | 'link' | 'delete') {
   }
 }
 
-// 按标题和网址筛选记录，保留原有时间顺序
-const filtered = computed(() => {
-  const q = query.value.trim().toLowerCase();
-
-  return q
-    ? records.value.filter(r => `${r.title}\n${r.url}`.toLowerCase().includes(q))
-    : records.value;
-});
-
 const pageSize = computed(() => settings.value?.pageSize || 10);
-const pageCount = computed(() => Math.max(1, Math.ceil(filtered.value.length / pageSize.value)));
+const pageCount = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)));
 
-const visible = computed(() =>
-  filtered.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value),
+// 连续输入停止 300ms 后应用搜索，清空时立即恢复首页并取消待执行的搜索
+watch(
+  query,
+  (value, _previous, onCleanup) => {
+    const q = value.trim().toLowerCase();
+    const applySearch = () => {
+      searchQuery.value = q;
+      page.value = 1;
+    };
+
+    if (!q) {
+      applySearch();
+      return;
+    }
+
+    // 输入时立即使旧查询失效，防抖期间保留已显示的列表且不发起查询
+    searchQuery.value = null;
+    const timer = setTimeout(applySearch, 300);
+    onCleanup(() => clearTimeout(timer));
+  },
+  { flush: 'sync' },
 );
 
-// 搜索或每页条数变化时返回首页，删除末页记录后收敛到最后一页
-watch([query, pageSize], () => {
-  page.value = 1;
-});
-
-watch(pageCount, value => {
-  if (page.value > value) page.value = value;
-});
+// 每页条数变化立即回到首页，不等待搜索防抖
+watch(pageSize, () => (page.value = 1));
 
 // 首次订阅读取设置，后续跨页面变更同步语言、宽度和恢复行为
 const settingsSubscription = liveQuery(getSettings).subscribe({
@@ -184,16 +188,50 @@ const settingsSubscription = liveQuery(getSettings).subscribe({
   error: error => console.error('Failed to observe settings:', error),
 });
 
-// 记录增删和导入统一由查询订阅刷新，设置或快照写入不会触发列表查询
-const recordsSubscription = liveQuery(listRecords).subscribe({
-  next: value => (records.value = value),
-  error: error => console.error('Failed to observe records:', error),
-});
+// 参数变化时重建订阅，记录增删和导入仍由 liveQuery 自动刷新当前页
+watch(
+  [page, pageSize, searchQuery],
+  ([currentPage, size, q], _previous, onCleanup) => {
+    loading.value = true;
+    if (q === null) return;
 
-// 组件卸载时释放订阅，避免继续接收数据库更新
+    let active = true;
+    // 同时校验最新参数，覆盖参数已变但旧订阅尚未清理的微任务间隙
+    const isCurrent = () =>
+      active && page.value === currentPage && pageSize.value === size && searchQuery.value === q;
+    const subscription = liveQuery(() => {
+      if (isCurrent()) loading.value = true;
+      return listRecords(currentPage, size, q);
+    }).subscribe({
+      next(value) {
+        if (!isCurrent()) return;
+        records.value = value.records;
+        total.value = value.total;
+        page.value = value.page;
+        loading.value = false;
+        failed.value = false;
+      },
+      error(error) {
+        if (!isCurrent()) return;
+        loading.value = false;
+        failed.value = true;
+        console.error('Failed to observe records:', error);
+        toast.add({ title: t('operationFailed'), color: 'error', duration: 2000 });
+      },
+    });
+
+    // 切换参数或卸载时释放订阅，忽略旧查询迟到的结果
+    onCleanup(() => {
+      active = false;
+      subscription.unsubscribe();
+    });
+  },
+  { immediate: true },
+);
+
+// 查询订阅与防抖计时器由 watch 自动清理，此处释放独立的设置订阅
 onUnmounted(() => {
   settingsSubscription.unsubscribe();
-  recordsSubscription.unsubscribe();
 });
 
 // 左键前台恢复并关闭 popup，中键后台恢复，按设置决定是否删除记录
