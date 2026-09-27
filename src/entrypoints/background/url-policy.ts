@@ -8,20 +8,21 @@ interface TabLike {
   incognito?: boolean;
 }
 
-// 仅记录协议白名单内的网址，Chrome 内部页面和扩展页面还需设置允许
+// 仅记录协议白名单内的网址，Chrome 内部页面和扩展页面还需设置允许，始终排除新标签页
 export function shouldRecordUrl(url: string | undefined, settings: Settings) {
   if (!url) return false;
 
-  let scheme: string;
+  let parsedUrl: URL;
   try {
-    scheme = new URL(url).protocol;
+    parsedUrl = new URL(url);
   } catch {
     return false;
   }
 
-  if (allowedProtocols.has(scheme)) return true;
-  if (scheme === 'chrome:') return settings.recordChromeUrls;
-  if (scheme === 'chrome-extension:') return settings.recordExtensionUrls;
+  if (allowedProtocols.has(parsedUrl.protocol)) return true;
+  if (parsedUrl.protocol === 'chrome:')
+    return settings.recordChromeUrls && parsedUrl.hostname !== 'newtab';
+  if (parsedUrl.protocol === 'chrome-extension:') return settings.recordExtensionUrls;
 
   return false;
 }

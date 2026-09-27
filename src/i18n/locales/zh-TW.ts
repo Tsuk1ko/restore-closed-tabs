@@ -18,7 +18,7 @@ export default {
   deleteOnRestore: '還原後刪除紀錄',
   deduplicateUrlOnClose: '紀錄時清除相同網址的舊紀錄',
   recordIncognito: '在無痕模式下啟用紀錄',
-  recordChromeUrls: '紀錄 chrome:// 頁面',
+  recordChromeUrls: '紀錄 chrome:// 頁面（排除 chrome://newtab/）',
   recordExtensionUrls: '紀錄 chrome-extension:// 頁面',
   data: '紀錄資料',
   export: '匯出',
