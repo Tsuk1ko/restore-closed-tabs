@@ -104,7 +104,7 @@
 <script setup lang="ts">
 import type { FormError } from '@nuxt/ui';
 import { useToast } from '@nuxt/ui/composables';
-import { en, zh_cn } from '@nuxt/ui/locale';
+import { en, zh_cn, zh_tw } from '@nuxt/ui/locale';
 import dayjs from 'dayjs';
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -117,10 +117,13 @@ import { resolveLocale } from '@/i18n';
 
 const { t, locale } = useI18n();
 const toast = useToast();
-const uiLocale = computed(() => (locale.value === 'zh-CN' ? zh_cn : en));
+const uiLocale = computed(() =>
+  locale.value === 'zh-TW' ? zh_tw : locale.value === 'zh-CN' ? zh_cn : en,
+);
 const localeItems = computed(() => [
   { label: t('localeBrowser'), value: 'browser' },
   { label: '简体中文', value: 'zh-CN' },
+  { label: '繁體中文', value: 'zh-TW' },
   { label: 'English', value: 'en' },
 ]);
 const numberFields = [

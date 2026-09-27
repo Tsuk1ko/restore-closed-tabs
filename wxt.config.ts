@@ -19,10 +19,12 @@ export default defineConfig({
       });
     },
   },
+  // 生成扩展清单，名称和描述由浏览器按语言从 _locales 解析
   manifest: () => ({
     key: process.env.MANIFEST_KEY,
-    name: 'Restore Closed Tabs',
-    description: 'Remember and restore closed tabs',
+    name: '__MSG_extName__',
+    description: '__MSG_extDescription__',
+    default_locale: 'en',
     permissions: ['tabs', 'favicon', 'storage', 'alarms'],
     incognito: 'spanning',
   }),

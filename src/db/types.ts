@@ -1,4 +1,4 @@
-export type LocaleSetting = 'browser' | 'zh-CN' | 'en';
+export type LocaleSetting = 'browser' | 'zh-CN' | 'zh-TW' | 'en';
 
 export interface TabRecord {
   id: string;

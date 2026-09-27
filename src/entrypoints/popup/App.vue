@@ -28,7 +28,7 @@
           :class="{ 'bg-elevated': contextRecord?.id === record.id }"
           :relative-time="
             dayjs(record.closedAt)
-              .locale(locale === 'zh-CN' ? 'zh-cn' : 'en')
+              .locale(locale === 'zh-TW' ? 'zh-tw' : locale === 'zh-CN' ? 'zh-cn' : 'en')
               .fromNow()
           "
           @open="open"
@@ -70,9 +70,10 @@
 
 <script setup lang="ts">
 import 'dayjs/locale/zh-cn';
+import 'dayjs/locale/zh-tw';
 import type { ContextMenuItem } from '@nuxt/ui';
 import { useToast } from '@nuxt/ui/composables';
-import { en, zh_cn } from '@nuxt/ui/locale';
+import { en, zh_cn, zh_tw } from '@nuxt/ui/locale';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { liveQuery } from 'dexie';
@@ -88,7 +89,9 @@ dayjs.extend(relativeTime);
 
 const { t, locale } = useI18n();
 const toast = useToast();
-const uiLocale = computed(() => (locale.value === 'zh-CN' ? zh_cn : en));
+const uiLocale = computed(() =>
+  locale.value === 'zh-TW' ? zh_tw : locale.value === 'zh-CN' ? zh_cn : en,
+);
 
 const records = ref<TabRecord[]>([]);
 const query = ref('');
