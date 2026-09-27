@@ -1,4 +1,4 @@
-import '@/styles.css';
+import '@/style.css';
 import './style.css';
 import '@/setup/dayjs';
 import ui from '@nuxt/ui/vue-plugin';

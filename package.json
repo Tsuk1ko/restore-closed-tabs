@@ -34,6 +34,7 @@
     "@wxt-dev/module-vue": "^1.0.3",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-tailwindcss": "^4.4.0",
     "prettier": "^3.9.9",
     "typescript": "^5.9.3",
     "vite": "^8.3.1",

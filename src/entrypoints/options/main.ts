@@ -1,4 +1,4 @@
-import '@/styles.css';
+import '@/style.css';
 import './style.css';
 import ui from '@nuxt/ui/vue-plugin';
 import { createApp } from 'vue';

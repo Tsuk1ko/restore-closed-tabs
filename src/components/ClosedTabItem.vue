@@ -24,7 +24,7 @@
     >
       <time
         :datetime="closedAtDate.toISOString()"
-        class="shrink-0 whitespace-nowrap text-[11px] text-muted"
+        class="shrink-0 text-[11px] whitespace-nowrap text-muted"
         >{{ relativeTime }}</time
       >
     </UTooltip>

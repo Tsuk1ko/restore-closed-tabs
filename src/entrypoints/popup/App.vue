@@ -51,7 +51,7 @@
       >
         <span ref="contextMenuTrigger" class="hidden" @contextmenu.stop></span>
       </UContextMenu>
-      <footer v-if="pageCount > 1" class="flex justify-center p-2 border-t border-default">
+      <footer v-if="pageCount > 1" class="flex justify-center border-t border-default p-2">
         <UPagination v-model:page="page" :total="total" :items-per-page="pageSize" size="xs" />
       </footer>
     </div>
