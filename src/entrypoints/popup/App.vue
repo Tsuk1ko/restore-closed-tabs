@@ -1,7 +1,7 @@
 <template>
   <UApp :locale="uiLocale">
     <div class="w-full bg-default text-default" :aria-busy="loading" @contextmenu.prevent>
-      <header class="flex gap-2 border-b border-default p-2">
+      <header class="flex gap-2 border-default p-2">
         <UInput
           v-model="query"
           class="min-w-0 flex-1"
@@ -51,7 +51,7 @@
       >
         <span ref="contextMenuTrigger" class="hidden" @contextmenu.stop></span>
       </UContextMenu>
-      <footer v-if="pageCount > 1" class="flex justify-center p-2">
+      <footer v-if="pageCount > 1" class="flex justify-center p-2 border-t border-default">
         <UPagination v-model:page="page" :total="total" :items-per-page="pageSize" size="xs" />
       </footer>
     </div>
