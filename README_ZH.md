@@ -1,5 +1,7 @@
 # 恢复已关闭的标签页
 
+[![](https://developer.chrome.com/static/docs/webstore/branding/image/UV4C4ybeBTsZt43U4xis.png)](https://chromewebstore.google.com/detail/bmancocnclojmcogdgdmgjpbknagdale)
+
 这是一款 Chrome 扩展，可保存已关闭标签页的历史记录，并通过弹出窗口搜索和恢复标签页，项目使用 WXT、Vue、Nuxt UI 和 Dexie 构建
 
 |                                        Popup                                         |                                       Settings                                       |

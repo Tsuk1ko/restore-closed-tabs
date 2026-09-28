@@ -2,6 +2,8 @@
 
 [中文](README_ZH.md)
 
+[![](https://developer.chrome.com/static/docs/webstore/branding/image/UV4C4ybeBTsZt43U4xis.png)](https://chromewebstore.google.com/detail/bmancocnclojmcogdgdmgjpbknagdale)
+
 A Chrome extension that keeps a searchable history of closed tabs and reopens them from its popup. It is built with WXT, Vue, Nuxt UI, and Dexie.
 
 |                                        Popup                                         |                                       Settings                                       |
