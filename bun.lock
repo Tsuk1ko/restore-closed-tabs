@@ -17,6 +17,7 @@
       "devDependencies": {
         "@antfu/eslint-config": "^9.5.1",
         "@tsuk1ko/eslint-config": "^2.1.1",
+        "@tsuk1ko/postversion": "^1.0.2",
         "@wxt-dev/auto-icons": "^1.1.2",
         "@wxt-dev/module-vue": "^1.0.3",
         "eslint": "^10.11.0",
@@ -512,6 +513,8 @@
     "@topcli/prompts": ["@topcli/prompts@4.0.0", "https://registry.npmmirror.com/@topcli/prompts/-/prompts-4.0.0.tgz", {}, "sha512-kkKYPb4k/6kRdnESt77B5vJrrYnYHIYczwv0P1c+tfN/IWEx3KZeKEHoUq7sImIyBEXWdA2uakIroD9pmRJziQ=="],
 
     "@tsuk1ko/eslint-config": ["@tsuk1ko/eslint-config@2.1.1", "https://registry.npmmirror.com/@tsuk1ko/eslint-config/-/eslint-config-2.1.1.tgz", { "dependencies": { "local-pkg": "^1.1.2", "write-package": "^7.2.0" }, "peerDependencies": { "@antfu/eslint-config": ">=7", "eslint": ">=9", "eslint-config-prettier": ">=9" }, "optionalPeers": ["eslint-config-prettier"], "bin": { "tec-init": "dist/cli.js" } }, "sha512-GLhIJ6j3VNqeKcTb41+dSiTl8gXcfipcKPPcYwsVlMqYkHUzgOlGDeAPOqJ8LCRcapHagX1j6DrlaXmB9HYuJw=="],
+
+    "@tsuk1ko/postversion": ["@tsuk1ko/postversion@1.0.2", "https://registry.npmmirror.com/@tsuk1ko/postversion/-/postversion-1.0.2.tgz", { "dependencies": { "yesno": "^0.4.0" }, "bin": { "tpv": "index.js" } }, "sha512-8SHVF8AA0iZhlmzv3QZ+1I5luKelVc7J6WAJbkRZJ638+zmxTadyNSVIiu4LxRfb6823MDHUra9HjVNw+Pigmg=="],
 
     "@types/debug": ["@types/debug@4.1.13", "https://registry.npmmirror.com/@types/debug/-/debug-4.1.13.tgz", { "dependencies": { "@types/ms": "*" } }, "sha512-KSVgmQmzMwPlmtljOomayoR89W4FynCAi3E8PPs7vmDVPe84hT+vGPKkJfThkmXs0x0jAaa9U8uW8bbfyS2fWw=="],
 
@@ -1868,6 +1871,8 @@
     "yargs-parser": ["yargs-parser@21.1.1", "https://registry.npmmirror.com/yargs-parser/-/yargs-parser-21.1.1.tgz", {}, "sha512-tVpsJW7DdjecAiFpbIB1e3qxIQsE6NoPc5/eTdrbbIC4h0LVsWhnoa3g+m2HclBIujHzsxZ4VJVA+GUuc2/LBw=="],
 
     "yauzl": ["yauzl@3.4.0", "https://registry.npmmirror.com/yauzl/-/yauzl-3.4.0.tgz", { "dependencies": { "pend": "~1.2.0" } }, "sha512-jIH9yLR9wqr0wOS0TpBvo/g/2UgZH5qePVbjgRliiF0BYvOZyaBknKsF+x9Iht0O6sqgnB93rCICdOZFecJuDw=="],
+
+    "yesno": ["yesno@0.4.0", "https://registry.npmmirror.com/yesno/-/yesno-0.4.0.tgz", {}, "sha512-tdBxmHvbXPBKYIg81bMCB7bVeDmHkRzk5rVJyYYXurwKkHq/MCd8rz4HSJUP7hW0H2NlXiq8IFiWvYKEHhlotA=="],
 
     "yjs": ["yjs@13.6.33", "https://registry.npmmirror.com/yjs/-/yjs-13.6.33.tgz", { "dependencies": { "lib0": "^0.2.99" } }, "sha512-q/UYvr1gOk4XII+Cu1CW2dINjYqJJFifTzogEaIARznrvX7uOlHsdTEXcnOBMuIsrCGEEKdNxi74kyMLZlKVfw=="],
 
