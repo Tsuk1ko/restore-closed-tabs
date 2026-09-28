@@ -31,6 +31,10 @@
   </UButton>
 </template>
 
+<script lang="ts">
+export const ITEM_HEIGHT = 41;
+</script>
+
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { TabRecord } from '@/db/types';

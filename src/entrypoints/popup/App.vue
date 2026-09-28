@@ -34,7 +34,7 @@
         <div
           v-if="pageCount > 1"
           aria-hidden="true"
-          :style="{ height: `${Math.max(0, pageSize - records.length) * 45}px` }"
+          :style="{ height: `${Math.max(0, pageSize - records.length) * ITEM_HEIGHT}px` }"
         ></div>
       </main>
       <UEmpty
@@ -71,7 +71,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { liveQuery } from 'dexie';
 import { computed, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import ClosedTabItem from '@/components/ClosedTabItem.vue';
+import ClosedTabItem, { ITEM_HEIGHT } from '@/components/ClosedTabItem.vue';
 import { deleteRecord, listRecords } from '@/db/records';
 import { getSettings } from '@/db/settings';
 import type { Settings, TabRecord } from '@/db/types';
