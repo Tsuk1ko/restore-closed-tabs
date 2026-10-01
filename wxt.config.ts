@@ -40,6 +40,12 @@ export default defineConfig({
       ui({
         router: false,
         colorMode: false,
+        // 扫描源码中的图标名称，将使用的图标打包到本地
+        icon: {
+          clientBundle: {
+            scan: true,
+          },
+        },
         autoImport: {
           dts: './src/auto-import.d.ts',
         },
