@@ -1,7 +1,20 @@
 <template>
   <UApp :locale="uiLocale">
     <main class="mx-auto grid max-w-160 gap-5 px-5 py-8">
-      <h1 class="text-2xl font-semibold">{{ t('settings') }}</h1>
+      <header class="flex items-center justify-between gap-4">
+        <h1 class="text-2xl font-semibold">{{ t('settings') }}</h1>
+        <!-- 在新标签页打开项目仓库，保留当前设置页面 -->
+        <UButton
+          aria-label="GitHub"
+          icon="i-lucide-github"
+          to="https://github.com/Tsuk1ko/restore-closed-tabs"
+          target="_blank"
+          rel="noopener noreferrer"
+          color="neutral"
+          variant="ghost"
+          class="rounded-full"
+        />
+      </header>
       <UForm :state="form" :validate="validate" :disabled="loading" class="grid gap-4">
         <UFormField name="locale" :label="t('locale')">
           <USelect
