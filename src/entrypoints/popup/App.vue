@@ -248,9 +248,10 @@ onUnmounted(() => {
 // 左键前台恢复并关闭 popup，中键后台恢复，按设置决定是否删除记录
 async function open(record: TabRecord, middle: boolean) {
   try {
-    await browser.tabs.create({ url: record.url, active: !middle });
+    const tab = await browser.tabs.create({ url: record.url, active: !middle });
 
-    if (settings.value?.deleteOnRestore) {
+    // 无痕标签未启用记录时保留原历史，避免关闭后无法重新记录而丢失
+    if (settings.value?.deleteOnRestore && (!tab.incognito || settings.value.recordIncognito)) {
       await deleteRecord(record.id);
     }
 
