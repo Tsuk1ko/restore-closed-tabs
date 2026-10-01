@@ -18,7 +18,7 @@ export default {
   deleteOnRestore: 'Delete after restore',
   deduplicateUrlOnClose: 'Remove older record with the same URL',
   recordIncognito: 'Record incognito tabs',
-  recordChromeUrls: 'Record chrome:// pages (excluding chrome://newtab/)',
+  recordChromeUrls: 'Record chrome:// pages (excluding newtab, whats-new)',
   recordExtensionUrls: 'Record chrome-extension:// pages',
   data: 'Record data',
   export: 'Export',

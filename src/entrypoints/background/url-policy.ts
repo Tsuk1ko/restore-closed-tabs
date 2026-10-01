@@ -1,6 +1,7 @@
 import type { Settings } from '@/db/types';
 
 const allowedProtocols = new Set(['http:', 'https:']);
+const excludedChromeHosts = new Set(['newtab', 'whats-new']);
 
 interface TabLike {
   url?: string;
@@ -8,7 +9,7 @@ interface TabLike {
   incognito?: boolean;
 }
 
-// 仅记录协议白名单内的网址，Chrome 内部页面和扩展页面还需设置允许，始终排除新标签页
+// 仅记录协议白名单内的网址，Chrome 内部页面和扩展页面还需设置允许，始终排除新标签页和更新介绍页
 export function shouldRecordUrl(url: string | undefined, settings: Settings) {
   if (!url) return false;
 
@@ -21,7 +22,7 @@ export function shouldRecordUrl(url: string | undefined, settings: Settings) {
 
   if (allowedProtocols.has(parsedUrl.protocol)) return true;
   if (parsedUrl.protocol === 'chrome:')
-    return settings.recordChromeUrls && parsedUrl.hostname !== 'newtab';
+    return settings.recordChromeUrls && !excludedChromeHosts.has(parsedUrl.hostname);
   if (parsedUrl.protocol === 'chrome-extension:') return settings.recordExtensionUrls;
 
   return false;
