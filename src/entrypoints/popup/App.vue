@@ -12,8 +12,8 @@
           spellcheck="false"
           autofocus
           @contextmenu.stop
-          @focus="highlightedIndex = undefined"
-          @blur="highlightedIndex = undefined"
+          @focus="onSearchFocusChange"
+          @blur="onSearchFocusChange"
           @keydown="onSearchKeydown"
         />
         <UButton
@@ -30,15 +30,11 @@
           v-for="(record, index) in records"
           :key="record.id"
           :record="record"
-          :tabindex="index === focusedIndex ? 0 : -1"
-          :class="{
-            'bg-accented': contextRecord
-              ? contextRecord.id === record.id
-              : highlightedIndex === index,
-          }"
-          @focus="selectRecord(index)"
+          :tabindex="index === navigationIndex ? 0 : -1"
+          :class="{ 'bg-accented': record.id === highlightedRecordId }"
+          @focus="onRecordFocus(index)"
           @blur="onRecordBlur"
-          @pointerdown="focusRecord(index)"
+          @pointerdown="onRecordPointerDown(index)"
           @pointermove="onRecordPointerMove($event, index)"
           @keydown="onRecordKeydown($event, record, index)"
           @open="open"
@@ -88,6 +84,7 @@ import ClosedTabItem, { ITEM_HEIGHT } from '@/components/ClosedTabItem.vue';
 import { deleteRecord, listRecords } from '@/db/records';
 import { getSettings } from '@/db/settings';
 import type { Settings, TabRecord } from '@/db/types';
+import { usePopupNavigation } from '@/hooks/usePopupNavigation';
 import { resolveLocale } from '@/i18n';
 
 dayjs.extend(relativeTime);
@@ -115,14 +112,6 @@ const query = ref('');
 const searchQuery = ref<string | null>('');
 const page = ref(1);
 const settings = ref<Settings>();
-const searchInput = ref<{ inputRef: HTMLInputElement | null }>();
-const recordList = ref<HTMLElement>();
-// 列表只保留一个 Tab 停靠点，焦点移动和翻页均以当前行位置为准
-const focusedIndex = ref(0);
-// 列表高亮与实际输入焦点分离，搜索框激活时悬停只更新键盘导航起点
-const highlightedIndex = ref<number>();
-// 显式移出列表后使待执行的焦点恢复失效，避免异步更新重新抢回焦点
-let listFocusVersion = 0;
 const contextMenuTrigger = ref<HTMLElement>();
 const contextRecord = ref<TabRecord>();
 
@@ -178,165 +167,32 @@ async function runContextAction(action: 'title' | 'url' | 'link' | 'delete') {
 const pageSize = computed(() => settings.value?.pageSize || 10);
 const pageCount = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)));
 
-// 返回搜索框并将光标放到末尾，便于继续编辑已有搜索词
-function focusSearch() {
-  highlightedIndex.value = undefined;
-  const input = searchInput.value?.inputRef;
-  input?.focus();
-  input?.setSelectionRange(input.value.length, input.value.length);
-}
-
-// 同步列表高亮和 Tab 停靠点，不改变实际输入焦点
-function selectRecord(index: number) {
-  focusedIndex.value = index;
-  highlightedIndex.value = index;
-}
-
-// 聚焦当前页指定行，并确保重复聚焦同一按钮时也能同步高亮
-function focusRecord(index: number) {
-  const button = recordList.value?.querySelectorAll<HTMLButtonElement>(':scope > button')[index];
-  if (!button) return;
-
-  selectRecord(index);
-  button.focus();
-}
-
-// 焦点离开列表时解除高亮，列表内部的焦点移动由下一项的 focus 事件更新
-function onRecordBlur(event: FocusEvent) {
-  if (!(event.relatedTarget instanceof Node) || !recordList.value?.contains(event.relatedTarget)) {
-    highlightedIndex.value = undefined;
-  }
-}
-
-// 页码限制在有效范围，搜索框焦点不受翻页影响
-function turnPage(offset: number) {
-  page.value = Math.max(1, Math.min(pageCount.value, page.value + offset));
-}
-
-// 搜索框有悬停项时从该项继续上下移动，翻页只更新列表而保留输入焦点
-function onSearchKeydown(event: KeyboardEvent) {
-  if (event.isComposing || event.altKey || event.ctrlKey || event.metaKey) return;
-
-  if (
-    highlightedIndex.value !== undefined &&
-    (event.key === 'ArrowUp' || event.key === 'ArrowDown')
-  ) {
-    const index = highlightedIndex.value;
-    const record = records.value[index];
-    if (record) onRecordKeydown(event, record, index);
-    return;
-  }
-
-  if (event.key === 'ArrowDown' && records.value.length) {
-    event.preventDefault();
-    focusRecord(0);
-  } else if (event.key === 'PageUp' || event.key === 'PageDown') {
-    event.preventDefault();
-    turnPage(event.key === 'PageUp' ? -1 : 1);
-  }
-}
-
-// 列表方向键移动或翻页，Home/End 跳到首末项，查找快捷键返回搜索框，Enter 恢复页面
-function onRecordKeydown(event: KeyboardEvent, record: TabRecord, index: number) {
-  if (event.isComposing || event.altKey) return;
-
-  // 在过滤修饰键前处理 Ctrl+F / Cmd+F，阻止浏览器默认查找行为
-  if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'f') {
-    event.preventDefault();
-    focusSearch();
-    return;
-  }
-
-  if (event.ctrlKey || event.metaKey) return;
-
-  switch (event.key) {
-    case 'ArrowUp':
-      event.preventDefault();
-      if (index === 0) focusSearch();
-      else focusRecord(index - 1);
-      break;
-    case 'ArrowDown':
-      event.preventDefault();
-      if (index < records.value.length - 1) {
-        focusRecord(index + 1);
-      } else if (!loading.value && page.value < pageCount.value) {
-        // 末项向下时进入下一页首项，等待列表更新期间避免连续跳页
-        selectRecord(0);
-        turnPage(1);
-      }
-      break;
-    case 'Enter':
-      // 阻止原生 Enter 再次触发 click，避免 Shift+Enter 同时前台打开
-      event.preventDefault();
-      if (!event.repeat) void open(record, event.shiftKey);
-      break;
-    case 'ArrowLeft':
-    case 'PageUp':
-      event.preventDefault();
-      turnPage(-1);
-      break;
-    case 'ArrowRight':
-    case 'PageDown':
-      event.preventDefault();
-      turnPage(1);
-      break;
-    case 'Home':
-      event.preventDefault();
-      focusRecord(0);
-      break;
-    case 'End':
-      event.preventDefault();
-      focusRecord(records.value.length - 1);
-      break;
-  }
-}
-
-// 鼠标实际移动时更新选中项，仅保留搜索框的输入焦点，静止鼠标不影响键盘或翻页
-function onRecordPointerMove(event: PointerEvent, index: number) {
-  if (event.pointerType !== 'mouse' || (!event.movementX && !event.movementY)) return;
-  // 右键菜单打开时保留菜单焦点，避免移动鼠标经过列表导致菜单失去键盘控制
-  if (contextRecord.value) return;
-
-  if (document.activeElement === searchInput.value?.inputRef) selectRecord(index);
-  else focusRecord(index);
-}
-
-// 鼠标离开列表区域时清空导航位置，只移除列表内的真实焦点，保留搜索框等控件焦点
-function onRecordListLeave() {
-  listFocusVersion++;
-  highlightedIndex.value = undefined;
-  focusedIndex.value = 0;
-
-  const activeElement = document.activeElement;
-  if (activeElement instanceof HTMLElement && recordList.value?.contains(activeElement)) {
-    activeElement.blur();
-  }
-}
-
-// 翻页及实时记录更新后保留行位置，项目不足时收缩到末项，空列表返回搜索框
-watch(records, async () => {
-  const focusVersion = listFocusVersion;
-  const hadListFocus = recordList.value?.contains(document.activeElement);
-  focusedIndex.value = Math.max(0, Math.min(focusedIndex.value, records.value.length - 1));
-  // 搜索框上的虚拟选中项也跟随翻页收缩，列表为空时解除高亮
-  if (highlightedIndex.value !== undefined) {
-    highlightedIndex.value = records.value.length ? focusedIndex.value : undefined;
-  }
-  await nextTick();
-
-  // 异步渲染期间若用户移到搜索框、设置、分页或菜单，则不再恢复列表焦点
-  if (
-    !hadListFocus ||
-    focusVersion !== listFocusVersion ||
-    (document.activeElement !== document.body &&
-      !recordList.value?.contains(document.activeElement))
-  ) {
-    return;
-  }
-
-  if (records.value.length) focusRecord(focusedIndex.value);
-  else focusSearch();
+const {
+  searchInput,
+  recordList,
+  navigationIndex,
+  highlightedIndex,
+  onSearchFocusChange,
+  onSearchKeydown,
+  onRecordFocus,
+  onRecordBlur,
+  onRecordPointerDown,
+  onRecordPointerMove,
+  onRecordKeydown,
+  onRecordListLeave,
+} = usePopupNavigation({
+  records,
+  page,
+  pageCount,
+  loading,
+  isMenuOpen: () => Boolean(contextRecord.value),
+  onOpen: open,
 });
+
+// 右键菜单目标优先高亮，否则使用导航模块给出的当前行
+const highlightedRecordId = computed(
+  () => contextRecord.value?.id ?? records.value[highlightedIndex.value ?? -1]?.id,
+);
 
 // 应用稳定后的搜索词并返回首页，定时器随组件作用域自动清理
 function applySearch(q: string) {
