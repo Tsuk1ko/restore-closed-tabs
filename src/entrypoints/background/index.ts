@@ -13,28 +13,26 @@ export default defineBackground(() => {
   initializeRecordCountBadge();
 
   if (import.meta.env.DEV) {
+    const newTabUrl = new Set<string | undefined>(['about:blank', 'chrome://newtab/']);
+
     browser.runtime.onInstalled.addListener(async () => {
       try {
         const url = browser.runtime.getURL('/popup.html');
         const tabs = await browser.tabs.query({});
         const existingPopup = tabs.find(tab => tab.url === url || tab.pendingUrl === url);
 
-        if (existingPopup?.id !== undefined) {
+        if (existingPopup?.id) {
           // 扩展重载会使已有页面上下文失效，刷新原标签页以加载新的 popup
           await browser.tabs.reload(existingPopup.id);
         } else {
-          const popup = await browser.tabs.create({ url });
+          await browser.tabs.create({ url });
+        }
 
-          // popup 创建成功后仅关闭同窗口原先激活的空白页，保留其他标签页
-          for (const tab of tabs) {
-            if (
-              tab.id !== undefined &&
-              tab.windowId === popup.windowId &&
-              tab.active &&
-              (tab.pendingUrl ?? tab.url) === 'about:blank'
-            ) {
-              await browser.tabs.remove(tab.id);
-            }
+        // popup 创建成功后仅关闭同窗口原先激活的空白页，保留其他标签页
+        for (const tab of tabs) {
+          if (tab.id && newTabUrl.has(tab.pendingUrl ?? tab.url)) {
+            await browser.tabs.remove(tab.id);
+            console.log('remove tab', tab);
           }
         }
       } catch (error) {
