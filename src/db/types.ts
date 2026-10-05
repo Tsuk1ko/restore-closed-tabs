@@ -17,6 +17,7 @@ export interface Settings {
   maxRecords: number;
   pageSize: number;
   popupWidth: number;
+  showRecordCountBadge: boolean;
   deleteOnRestore: boolean;
   deduplicateUrlOnClose: boolean;
   recordIncognito: boolean;

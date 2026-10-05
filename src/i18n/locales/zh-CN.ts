@@ -15,6 +15,7 @@ export default {
   maxRecords: '最大记录条数',
   pageSize: '每页条数',
   popupWidth: 'Popup 宽度',
+  showRecordCountBadge: '扩展程序图标显示记录数量下标',
   deleteOnRestore: '恢复后删除记录',
   deduplicateUrlOnClose: '记录时清除相同网址的旧记录',
   recordIncognito: '无痕模式下启用记录',

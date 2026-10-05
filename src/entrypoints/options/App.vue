@@ -144,6 +144,7 @@ const numberFields = [
   { name: 'popupWidth', min: 280, max: 800 },
 ] as const;
 const booleanFields = [
+  'showRecordCountBadge',
   'deleteOnRestore',
   'deduplicateUrlOnClose',
   'recordIncognito',

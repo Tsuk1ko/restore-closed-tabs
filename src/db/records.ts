@@ -1,10 +1,9 @@
+import { refreshRecordCountBadge } from '@/utils/record-count-badge';
 import { db } from './database';
-import { getSettings } from './settings';
 import type { Settings, TabRecord, TabSnapshot } from './types';
 
-export async function pruneRecords(settings?: Settings) {
-  settings ??= await getSettings();
-
+// 由新增或导入事务应用容量限制，角标在外层操作提交后统一刷新
+export async function pruneRecords(settings: Settings) {
   const count = await db.records.count();
   if (count <= settings.maxRecords) return;
 
@@ -16,9 +15,7 @@ export async function pruneRecords(settings?: Settings) {
 }
 
 // 写入关闭记录，并在同一事务内应用网址去重和容量限制
-export async function addClosedRecord(record: TabRecord, settings?: Settings) {
-  settings ??= await getSettings();
-
+async function addClosedRecord(record: TabRecord, settings: Settings) {
   await db.transaction('rw', db.records, async () => {
     if (settings.deduplicateUrlOnClose) await db.records.where('url').equals(record.url).delete();
 
@@ -51,9 +48,17 @@ export async function listRecords(
   });
 }
 
-export const deleteRecord = (id: string) => db.records.delete(id);
+// 删除提交后等待角标刷新，恢复标签页的调用方随后才关闭弹窗
+export async function deleteRecord(id: string) {
+  await db.records.delete(id);
+  await refreshRecordCountBadge();
+}
 
-export const clearRecords = () => db.records.clear();
+// 清空提交后刷新角标，启用时显示 0
+export async function clearRecords() {
+  await db.records.clear();
+  await refreshRecordCountBadge();
+}
 
 export async function upsertSnapshot(snapshot: TabSnapshot) {
   await db.snapshots.put(snapshot);
@@ -72,10 +77,15 @@ export const updateSnapshotTimes = (ids: string[], closedAt = Date.now()) =>
 
 // 原子完成历史写入和快照删除，失败时整笔回滚，重复调用不重建已处理记录
 export async function closeSnapshot(snapshot: TabSnapshot, settings: Settings, record = true) {
-  await db.transaction('rw', db.records, db.snapshots, async () => {
+  const recorded = await db.transaction('rw', db.records, db.snapshots, async () => {
     if (!(await db.snapshots.get(snapshot.id))) return;
-    if (record && !(await db.records.get(snapshot.id))) await addClosedRecord(snapshot, settings);
+    const shouldAdd = record && !(await db.records.get(snapshot.id));
+    if (shouldAdd) await addClosedRecord(snapshot, settings);
 
     await db.snapshots.delete(snapshot.id);
+    return shouldAdd;
   });
+
+  // 等待包含历史写入、去重、裁剪和快照删除的最外层事务提交，只刷新一次
+  if (recorded) await refreshRecordCountBadge();
 }

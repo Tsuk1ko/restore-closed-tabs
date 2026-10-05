@@ -1,5 +1,7 @@
+import { refreshRecordCountBadge } from '@/utils/record-count-badge';
 import { db } from './database';
 import { pruneRecords } from './records';
+import { getSettings } from './settings';
 import type { ExportPayload, TabRecord } from './types';
 
 const isRecord = (value: unknown): value is TabRecord => {
@@ -32,10 +34,13 @@ export async function importRecords(payload: unknown) {
   if (value.version !== 1 || !Array.isArray(value.records) || !value.records.every(isRecord))
     throw new Error('invalid-payload');
 
-  await db.transaction('rw', db.records, async () =>
-    db.records.bulkPut(value.records as TabRecord[]),
-  );
-  await pruneRecords();
+  const settings = await getSettings();
+  // 导入与容量裁剪一起提交，避免中途失败或显示尚未裁剪的数量
+  await db.transaction('rw', db.records, async () => {
+    await db.records.bulkPut(value.records as TabRecord[]);
+    await pruneRecords(settings);
+  });
+  await refreshRecordCountBadge();
 
   return value.records.length;
 }

@@ -1,4 +1,5 @@
 import { getSettings } from '@/db/settings';
+import { initializeRecordCountBadge } from '@/utils/record-count-badge';
 import {
   heartbeat,
   recoverSnapshots,
@@ -9,6 +10,8 @@ import {
 } from './tab-snapshots';
 
 export default defineBackground(() => {
+  initializeRecordCountBadge();
+
   if (import.meta.env.DEV) {
     browser.runtime.onInstalled.addListener(async () => {
       try {

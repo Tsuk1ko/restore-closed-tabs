@@ -15,6 +15,7 @@ export default {
   maxRecords: 'Maximum records',
   pageSize: 'Items per page',
   popupWidth: 'Popup width',
+  showRecordCountBadge: 'Show record count badge on the extension icon',
   deleteOnRestore: 'Delete after restore',
   deduplicateUrlOnClose: 'Remove older record with the same URL',
   recordIncognito: 'Record incognito tabs',

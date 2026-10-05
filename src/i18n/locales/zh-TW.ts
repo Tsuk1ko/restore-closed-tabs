@@ -15,6 +15,7 @@ export default {
   maxRecords: '最多紀錄筆數',
   pageSize: '每頁筆數',
   popupWidth: '彈出視窗寬度',
+  showRecordCountBadge: '擴充功能圖示顯示紀錄數量徽章',
   deleteOnRestore: '還原後刪除紀錄',
   deduplicateUrlOnClose: '紀錄時清除相同網址的舊紀錄',
   recordIncognito: '在無痕模式下啟用紀錄',

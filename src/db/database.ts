@@ -8,6 +8,7 @@ export const defaultSettings: Settings = {
   maxRecords: 1000,
   pageSize: 10,
   popupWidth: 400,
+  showRecordCountBadge: false,
   deleteOnRestore: false,
   deduplicateUrlOnClose: false,
   recordIncognito: false,
