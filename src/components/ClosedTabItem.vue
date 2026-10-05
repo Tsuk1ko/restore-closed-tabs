@@ -2,7 +2,8 @@
   <UButton
     color="neutral"
     variant="ghost"
-    class="w-full gap-2 rounded-none border-t border-default px-2 py-1 text-left font-normal outline-none hover:bg-accented focus:bg-accented"
+    class="w-full gap-2 rounded-none border-t border-default px-2 py-1 text-left font-normal outline-none"
+    :ui="{ base: withoutHoverStyles }"
     @click="$emit('open', record, false)"
     @auxclick.middle.prevent="$emit('open', record, true)"
   >
@@ -38,6 +39,14 @@ import AppIcon from './AppIcon.vue';
 
 const { record } = defineProps<{ record: TabRecord }>();
 defineEmits<{ open: [record: TabRecord, middle: boolean] }>();
+
+// 使用组件库的样式替换接口移除默认 hover 样式，背景统一由列表选中项控制
+function withoutHoverStyles(classes: string) {
+  return classes
+    .split(' ')
+    .filter(className => !className.includes('hover:'))
+    .join(' ');
+}
 
 // 无效时间不生成 datetime，避免历史或导入数据导致 toISOString 抛出异常
 const closedAtDate = computed(() => {
