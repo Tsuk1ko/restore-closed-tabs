@@ -119,7 +119,6 @@ import type { FormError } from '@nuxt/ui';
 import { useToast } from '@nuxt/ui/composables';
 import { en, zh_cn, zh_tw } from '@nuxt/ui/locale';
 import dayjs from 'dayjs';
-import { computed, onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { defaultSettings } from '@/db/database';
 import { exportRecords, importRecords } from '@/db/import-export';

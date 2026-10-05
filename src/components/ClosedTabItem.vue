@@ -32,7 +32,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import type { TabRecord } from '@/db/types';
 import { useRelativeTime } from '@/hooks/useCurrentTime';
 import AppIcon from './AppIcon.vue';

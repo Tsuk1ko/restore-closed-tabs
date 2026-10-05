@@ -2,7 +2,6 @@ import '@/style.css';
 import './style.css';
 import '@/setup/dayjs';
 import ui from '@nuxt/ui/vue-plugin';
-import { createApp } from 'vue';
 import { getSettings } from '@/db/settings';
 import { createI18nForSettings } from '@/i18n';
 import App from './App.vue';
