@@ -197,9 +197,18 @@ function onSearchKeydown(event: KeyboardEvent) {
   }
 }
 
-// 列表方向键移动或翻页，Enter 复用现有前台和后台恢复行为
+// 列表方向键移动或翻页，Home/End 跳到首末项，查找快捷键返回搜索框，Enter 恢复页面
 function onRecordKeydown(event: KeyboardEvent, record: TabRecord, index: number) {
-  if (event.isComposing || event.altKey || event.ctrlKey || event.metaKey) return;
+  if (event.isComposing || event.altKey) return;
+
+  // 在过滤修饰键前处理 Ctrl+F / Cmd+F，阻止浏览器默认查找行为
+  if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'f') {
+    event.preventDefault();
+    focusSearch();
+    return;
+  }
+
+  if (event.ctrlKey || event.metaKey) return;
 
   switch (event.key) {
     case 'ArrowUp':
@@ -217,6 +226,11 @@ function onRecordKeydown(event: KeyboardEvent, record: TabRecord, index: number)
         turnPage(1);
       }
       break;
+    case 'Enter':
+      // 阻止原生 Enter 再次触发 click，避免 Shift+Enter 同时前台打开
+      event.preventDefault();
+      if (!event.repeat) void open(record, event.shiftKey);
+      break;
     case 'ArrowLeft':
     case 'PageUp':
       event.preventDefault();
@@ -227,10 +241,13 @@ function onRecordKeydown(event: KeyboardEvent, record: TabRecord, index: number)
       event.preventDefault();
       turnPage(1);
       break;
-    case 'Enter':
-      // 阻止原生 Enter 再次触发 click，避免 Shift+Enter 同时前台打开
+    case 'Home':
       event.preventDefault();
-      if (!event.repeat) void open(record, event.shiftKey);
+      focusRecord(0);
+      break;
+    case 'End':
+      event.preventDefault();
+      focusRecord(records.value.length - 1);
       break;
   }
 }
