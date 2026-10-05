@@ -2,7 +2,7 @@
   <UButton
     color="neutral"
     variant="ghost"
-    class="w-full gap-2 rounded-none border-t border-default px-2 py-1 text-left font-normal outline-none focus:bg-elevated"
+    class="w-full gap-2 rounded-none border-t border-default px-2 py-1 text-left font-normal outline-none hover:bg-accented focus:bg-accented"
     @click="$emit('open', record, false)"
     @auxclick.middle.prevent="$emit('open', record, true)"
   >

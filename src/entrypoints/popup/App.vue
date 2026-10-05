@@ -29,7 +29,7 @@
           :key="record.id"
           :record="record"
           :tabindex="index === focusedIndex ? 0 : -1"
-          :class="{ 'bg-elevated': contextRecord?.id === record.id }"
+          :class="{ 'bg-accented': contextRecord?.id === record.id }"
           @focus="focusedIndex = index"
           @pointerdown="focusRecord(index)"
           @pointermove="onRecordPointerMove($event, index)"
