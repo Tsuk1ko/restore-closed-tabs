@@ -3,6 +3,7 @@
     <div class="w-full bg-default text-default" :aria-busy="loading" @contextmenu.prevent>
       <header class="flex gap-2 border-default p-2">
         <UInput
+          ref="searchInput"
           v-model="query"
           class="min-w-0 flex-1"
           :placeholder="t('search')"
@@ -11,6 +12,7 @@
           spellcheck="false"
           autofocus
           @contextmenu.stop
+          @keydown="onSearchKeydown"
         />
         <UButton
           icon="i-lucide-settings"
@@ -21,12 +23,17 @@
           @click="browser.runtime.openOptionsPage()"
         />
       </header>
-      <main v-if="records.length">
+      <main v-if="records.length" ref="recordList">
         <ClosedTabItem
-          v-for="record in records"
+          v-for="(record, index) in records"
           :key="record.id"
           :record="record"
+          :tabindex="index === focusedIndex ? 0 : -1"
           :class="{ 'bg-elevated': contextRecord?.id === record.id }"
+          @focus="focusedIndex = index"
+          @pointerdown="focusRecord(index)"
+          @pointermove="onRecordPointerMove($event, index)"
+          @keydown="onRecordKeydown($event, record, index)"
           @open="open"
           @contextmenu.stop="showContextMenu($event, record)"
         />
@@ -69,7 +76,6 @@ import { useTimeoutFn } from '@vueuse/core';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { liveQuery } from 'dexie';
-import { computed, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ClosedTabItem, { ITEM_HEIGHT } from '@/components/ClosedTabItem.vue';
 import { deleteRecord, listRecords } from '@/db/records';
@@ -102,6 +108,10 @@ const query = ref('');
 const searchQuery = ref<string | null>('');
 const page = ref(1);
 const settings = ref<Settings>();
+const searchInput = ref<{ inputRef: HTMLInputElement | null }>();
+const recordList = ref<HTMLElement>();
+// 列表只保留一个 Tab 停靠点，焦点移动和翻页均以当前行位置为准
+const focusedIndex = ref(0);
 const contextMenuTrigger = ref<HTMLElement>();
 const contextRecord = ref<TabRecord>();
 
@@ -156,6 +166,104 @@ async function runContextAction(action: 'title' | 'url' | 'link' | 'delete') {
 
 const pageSize = computed(() => settings.value?.pageSize || 10);
 const pageCount = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)));
+
+// 返回搜索框并将光标放到末尾，便于继续编辑已有搜索词
+function focusSearch() {
+  const input = searchInput.value?.inputRef;
+  input?.focus();
+  input?.setSelectionRange(input.value.length, input.value.length);
+}
+
+// 聚焦当前页指定行，原生按钮负责 Tab 顺序及无障碍语义
+function focusRecord(index: number) {
+  recordList.value?.querySelectorAll<HTMLButtonElement>(':scope > button')[index]?.focus();
+}
+
+// 页码限制在有效范围，搜索框焦点不受翻页影响
+function turnPage(offset: number) {
+  page.value = Math.max(1, Math.min(pageCount.value, page.value + offset));
+}
+
+// 搜索框向下进入列表，PageUp 和 PageDown 仅切换页码
+function onSearchKeydown(event: KeyboardEvent) {
+  if (event.isComposing || event.altKey || event.ctrlKey || event.metaKey) return;
+
+  if (event.key === 'ArrowDown' && records.value.length) {
+    event.preventDefault();
+    focusRecord(0);
+  } else if (event.key === 'PageUp' || event.key === 'PageDown') {
+    event.preventDefault();
+    turnPage(event.key === 'PageUp' ? -1 : 1);
+  }
+}
+
+// 列表方向键移动或翻页，Enter 复用现有前台和后台恢复行为
+function onRecordKeydown(event: KeyboardEvent, record: TabRecord, index: number) {
+  if (event.isComposing || event.altKey || event.ctrlKey || event.metaKey) return;
+
+  switch (event.key) {
+    case 'ArrowUp':
+      event.preventDefault();
+      if (index === 0) focusSearch();
+      else focusRecord(index - 1);
+      break;
+    case 'ArrowDown':
+      event.preventDefault();
+      if (index < records.value.length - 1) {
+        focusRecord(index + 1);
+      } else if (!loading.value && page.value < pageCount.value) {
+        // 末项向下时进入下一页首项，等待列表更新期间避免连续跳页
+        focusedIndex.value = 0;
+        turnPage(1);
+      }
+      break;
+    case 'ArrowLeft':
+    case 'PageUp':
+      event.preventDefault();
+      turnPage(-1);
+      break;
+    case 'ArrowRight':
+    case 'PageDown':
+      event.preventDefault();
+      turnPage(1);
+      break;
+    case 'Enter':
+      // 阻止原生 Enter 再次触发 click，避免 Shift+Enter 同时前台打开
+      event.preventDefault();
+      if (!event.repeat) void open(record, event.shiftKey);
+      break;
+  }
+}
+
+// 仅列表已有焦点时跟随鼠标实际移动，避免打断输入或翻页后被静止鼠标抢焦点
+function onRecordPointerMove(event: PointerEvent, index: number) {
+  if (
+    event.pointerType === 'mouse' &&
+    (event.movementX || event.movementY) &&
+    recordList.value?.contains(document.activeElement)
+  ) {
+    focusRecord(index);
+  }
+}
+
+// 翻页及实时记录更新后保留行位置，项目不足时收缩到末项，空列表返回搜索框
+watch(records, async () => {
+  const hadListFocus = recordList.value?.contains(document.activeElement);
+  focusedIndex.value = Math.max(0, Math.min(focusedIndex.value, records.value.length - 1));
+  await nextTick();
+
+  // 异步渲染期间若用户移到搜索框、设置、分页或菜单，则不再恢复列表焦点
+  if (
+    !hadListFocus ||
+    (document.activeElement !== document.body &&
+      !recordList.value?.contains(document.activeElement))
+  ) {
+    return;
+  }
+
+  if (records.value.length) focusRecord(focusedIndex.value);
+  else focusSearch();
+});
 
 // 应用稳定后的搜索词并返回首页，定时器随组件作用域自动清理
 function applySearch(q: string) {
