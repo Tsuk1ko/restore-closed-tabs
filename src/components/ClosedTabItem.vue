@@ -7,7 +7,7 @@
     @click="$emit('open', record, false)"
     @auxclick.middle.prevent="$emit('open', record, true)"
   >
-    <AppIcon :src="record.faviconUrl" :alt="record.title" />
+    <AppIcon :page-url="record.url" />
     <span class="flex min-w-0 flex-1 flex-col">
       <strong class="truncate text-[13px] leading-4.5" :title="record.title">{{
         record.title
