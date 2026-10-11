@@ -13,7 +13,6 @@ interface TabLike {
   id?: number;
   url?: string;
   title?: string;
-  favIconUrl?: string;
   incognito?: boolean;
 }
 
@@ -58,7 +57,6 @@ export async function updateTab(tab: TabLike, settings: Settings) {
     id,
     url: tab.url,
     title: tab.title,
-    faviconUrl: tab.favIconUrl,
     closedAt: Date.now(),
     incognito: Boolean(tab.incognito),
   };

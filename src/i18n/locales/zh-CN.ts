@@ -26,6 +26,7 @@ export default {
   import: '导入',
   clear: '清除全部记录',
   importSuccess: '已导入 {count} 条记录',
+  importPartialSuccess: '已导入 {count} 条记录，有 {skipCount} 条记录因损坏而未导入',
   invalidImport: '文件格式无效或版本不支持',
   clearConfirm: '确定清除全部记录吗？',
   restoreError: '无法打开此页面',

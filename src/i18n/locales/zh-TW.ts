@@ -26,6 +26,7 @@ export default {
   import: '匯入',
   clear: '清除所有紀錄',
   importSuccess: '已匯入 {count} 筆紀錄',
+  importPartialSuccess: '已匯入 {count} 筆紀錄，有 {skipCount} 筆紀錄因損毀而未匯入',
   invalidImport: '檔案格式無效或版本不支援',
   clearConfirm: '確定要清除所有紀錄嗎？',
   restoreError: '無法開啟此頁面',

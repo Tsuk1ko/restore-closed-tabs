@@ -78,7 +78,6 @@ export default defineBackground(() => {
     if (
       changeInfo.url !== undefined ||
       changeInfo.title !== undefined ||
-      changeInfo.favIconUrl !== undefined ||
       changeInfo.status === 'complete'
     )
       enqueue(async () => updateTab(tab, await getSettings()), tab.id);

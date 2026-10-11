@@ -26,6 +26,7 @@ export default {
   import: 'Import',
   clear: 'Clear all records',
   importSuccess: 'Imported {count} records',
+  importPartialSuccess: 'Imported {count} records; skipped {skipCount} corrupted records',
   invalidImport: 'Invalid file or unsupported version',
   clearConfirm: 'Clear all records?',
   restoreError: 'Unable to open this page',

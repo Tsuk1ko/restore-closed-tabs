@@ -29,6 +29,20 @@ export class TabsDatabase extends Dexie {
       snapshots: 'id, closedAt',
       settings: 'id',
     });
+
+    // 在升级事务中清理两张表的旧图标属性，索引不变，失败时整笔回滚
+    this.version(2)
+      .stores({})
+      .upgrade(async transaction => {
+        for (const name of ['records', 'snapshots']) {
+          await transaction
+            .table(name)
+            .toCollection()
+            .modify(record => {
+              delete record.faviconUrl;
+            });
+        }
+      });
   }
 }
 

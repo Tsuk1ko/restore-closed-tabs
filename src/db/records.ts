@@ -1,4 +1,5 @@
 import { refreshRecordCountBadge } from '@/utils/record-count-badge';
+import { isTabRecord, pickTabRecord } from '@/utils/tab-record';
 import { db } from './database';
 import type { Settings, TabRecord, TabSnapshot } from './types';
 
@@ -19,7 +20,7 @@ async function addClosedRecord(record: TabRecord, settings: Settings) {
   await db.transaction('rw', db.records, async () => {
     if (settings.deduplicateUrlOnClose) await db.records.where('url').equals(record.url).delete();
 
-    await db.records.put(record);
+    await db.records.put(pickTabRecord(record));
     await pruneRecords(settings);
   });
 }
@@ -60,16 +61,23 @@ export async function clearRecords() {
   await refreshRecordCountBadge();
 }
 
+// 快照写入同样只保留模型字段，避免恢复路径传播旧属性
 export async function upsertSnapshot(snapshot: TabSnapshot) {
-  await db.snapshots.put(snapshot);
+  await db.snapshots.put(pickTabRecord(snapshot));
 }
 
 export const deleteSnapshot = (id: string) => db.snapshots.delete(id);
 
-// Worker 内存丢失后可通过会话 UUID 读取持久化快照
-export const getSnapshot = (id: string) => db.snapshots.get(id);
+// Worker 内存丢失后通过会话 UUID 读取快照，损坏项不参与恢复
+export async function getSnapshot(id: string) {
+  const snapshot = await db.snapshots.get(id);
+  return isTabRecord(snapshot) ? snapshot : undefined;
+}
 
-export const listSnapshots = () => db.snapshots.toArray();
+// 批量恢复前逐项校验，单条快照损坏不影响其他记录
+export async function listSnapshots() {
+  return (await db.snapshots.toArray()).filter(isTabRecord);
+}
 
 // 只刷新当前存活标签的快照，保留待恢复快照的原始时间
 export const updateSnapshotTimes = (ids: string[], closedAt = Date.now()) =>
@@ -78,7 +86,7 @@ export const updateSnapshotTimes = (ids: string[], closedAt = Date.now()) =>
 // 原子完成历史写入和快照删除，失败时整笔回滚，重复调用不重建已处理记录
 export async function closeSnapshot(snapshot: TabSnapshot, settings: Settings, record = true) {
   const recorded = await db.transaction('rw', db.records, db.snapshots, async () => {
-    if (!(await db.snapshots.get(snapshot.id))) return;
+    if (!(await getSnapshot(snapshot.id))) return;
     const shouldAdd = record && !(await db.records.get(snapshot.id));
     if (shouldAdd) await addClosedRecord(snapshot, settings);
 

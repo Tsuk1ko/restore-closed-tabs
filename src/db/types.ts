@@ -4,7 +4,6 @@ export interface TabRecord {
   id: string;
   url: string;
   title: string;
-  faviconUrl?: string;
   closedAt: number;
   incognito: boolean;
 }

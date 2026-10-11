@@ -227,8 +227,12 @@ async function readFile(file: File | null | undefined) {
   if (!file || importing.value) return;
   importing.value = true;
   try {
-    const count = await importRecords(JSON.parse(await file.text()));
-    toast.add({ title: t('importSuccess', { count }), color: 'success', duration: 2000 });
+    const { count, skipCount } = await importRecords(JSON.parse(await file.text()));
+    toast.add({
+      title: t(skipCount ? 'importPartialSuccess' : 'importSuccess', { count, skipCount }),
+      color: skipCount ? 'warning' : 'success',
+      duration: 2000,
+    });
   } catch {
     toast.add({ title: t('invalidImport'), color: 'error', duration: 2000 });
   } finally {
